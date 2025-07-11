@@ -9,8 +9,9 @@ __pycache__/
 
 # Конфигурации и логи
 *.log
-*.sqlite3
-db.sqlite3
+.dockerignore
+#*.sqlite3     <------ нужно поменять для файлов PostgrasSQL
+#db.sqlite3
 
 # Файлы IDE/редакторов
 .vscode/

@@ -1,0 +1,42 @@
+services:
+#  api-gateway:
+#    container_name: api-gateway
+#    build:
+#      context: .\api-gateway
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8080:8000"
+#    environment:
+#      - ENV=dev
+##    depends_on:
+##      - ms-auth
+#    restart: always
+
+  db-pgsql1:
+    image: postgres:13
+    container_name: db-pgsql_auth
+    environment:
+      POSTGRES_USER: art
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: auth_users
+    volumes:
+      - postgres_data_auth:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  ms-auth:
+    container_name: ms-auth
+    build:
+      context: .\auth_service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8000"
+    environment:
+      - ENV=dev
+    depends_on:
+      - db-pgsql1
+    restart: always
+
+volumes:
+  postgres_data_auth:
+    driver: local
