@@ -8,8 +8,7 @@ from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# to get a string like this run:
-# openssl rand -hex 32
+# CHANGE IT !!!!!!!!
 SECRET_KEY = "ed58a684e8c45f8008d5d9565c1f439e9b782e27617c86260b230d1b17f2ee4f"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

@@ -16,8 +16,8 @@ services:
     image: postgres:13
     container_name: db-pgsql_auth
     environment:
-      POSTGRES_USER: art
-      POSTGRES_PASSWORD: 123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: my_own_password_123
       POSTGRES_DB: auth_users
     volumes:
       - postgres_data_auth:/var/lib/postgresql/data
@@ -31,12 +31,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8000"
-    environment:
-      - ENV=dev
+    env_file:
+      - auth_service/.env
     depends_on:
       - db-pgsql1
     restart: always
-
 volumes:
   postgres_data_auth:
     driver: local
