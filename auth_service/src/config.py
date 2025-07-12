@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file="../.env")  # required addition settings for docker
+
     DB_HOST: str
     DB_PORT: int
     DB_USER: str
@@ -18,4 +20,4 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
-setting = Settings()
+settings = Settings()

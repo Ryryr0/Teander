@@ -12,9 +12,9 @@ services:
 ##      - ms-auth
 #    restart: always
 
-  db-pgsql1:
-    image: postgres:13
-    container_name: db-pgsql_auth
+  db-pgsql:
+    image: postgres:latest
+    container_name: db-pgsql-auth
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: my_own_password_123
@@ -34,7 +34,7 @@ services:
     env_file:
       - auth_service/.env
     depends_on:
-      - db-pgsql1
+      - db-pgsql
     restart: always
 volumes:
   postgres_data_auth:
