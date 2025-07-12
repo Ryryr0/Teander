@@ -10,7 +10,7 @@ __pycache__/
 # Конфигурации и логи
 *.log
 .dockerignore
-#*.sqlite3     <------ нужно поменять для файлов PostgrasSQL
+#*.sqlite3
 #db.sqlite3
 
 # Файлы IDE/редакторов
