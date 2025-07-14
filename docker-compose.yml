@@ -31,6 +31,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8000"
+    volumes:
+      - ./auth_service/keys:/app/keys:ro
     env_file:
       - auth_service/.env
     depends_on:

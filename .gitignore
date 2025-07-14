@@ -6,12 +6,11 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pem
 
 # Конфигурации и логи
 *.log
 .dockerignore
-#*.sqlite3
-#db.sqlite3
 
 # Файлы IDE/редакторов
 .vscode/
