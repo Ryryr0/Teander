@@ -6,7 +6,8 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./src/ ./
+COPY ./src ./src
+COPY ./keys ./keys
 
 EXPOSE 8000
 

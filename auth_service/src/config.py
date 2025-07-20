@@ -1,9 +1,12 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file="C:/Users/artem/Desktop/traineeship/pet_project/Teander/auth_service/.env")  # not need in docker
+    # model_config = SettingsConfigDict(
+    #     env_file="C:/Users/artem/Desktop/traineeship/pet_project/Teander/auth_service/.env"
+    # )  # not need in docker
 
     DB_HOST: str
     DB_PORT: int
@@ -25,13 +28,13 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
-    def PRIVATE_KEY(self) -> str:
-        with open(self.PRIVATE_KEY_PATH, "r") as f:
+    def PRIVATE_KEY(self) -> bytes:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../keys/private.pem"), "rb") as f:
             return f.read()
 
     @property
-    def PUBLIC_KEY(self) -> str:
-        with open(self.PUBLIC_KEY_PATH, "r") as f:
+    def PUBLIC_KEY(self) -> bytes:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../keys/public.pem"), "rb") as f:
             return f.read()
 
 

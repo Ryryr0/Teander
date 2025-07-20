@@ -10,8 +10,9 @@ from fastapi.responses import HTMLResponse
 
 from config import settings
 from database.queries import Queries
-from schemas import Token, UserDTO, UserPostDTO
-from dependencies import user_post_form
+from logger import Logger
+from schemas import Token, UserDTO, UserPostDTO, TokenData
+from dependencies import get_user_post_form, get_token_data
 
 
 router = APIRouter(
@@ -35,11 +36,12 @@ class HashedPWD:
 
 
 async def authenticate_user(username: str, password: str):
-    user = await Queries.get_user(username=username)
-    if not user:
+    user = await Queries.get_user(username)
+    if not user or user.disabled:
         return False
     if not HashedPWD.verify_password(password, user.hashed_password):
         return False
+    Logger.info(f"User <username: {user.username}> was authenticated")
     return user
 
 
@@ -67,37 +69,55 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id}, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
+
+    Logger.info(f"Token was issued for user <id: {user.id}, username: {user.username}>")
     return Token(access_token=access_token, token_type="bearer")
 
 
 @router.post("/reg")
-async def registrate_user(form_data: Annotated[UserPostDTO, Depends(user_post_form)], password: Annotated[str, Form()]):
+async def registrate_user(
+        form_data: Annotated[UserPostDTO, Depends(get_user_post_form)],
+        password: Annotated[str, Form()],
+):
     try:
         user = UserDTO(
             **form_data.model_dump(),
             hashed_password=HashedPWD.get_password_hash(password)
         )
-        await Queries.post_user(user)
+        user_id = await Queries.post_user(user)
     except ValueError as ex:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=ex.args[0],
+            detail=ex.args,
         )
+    Logger.info(f"User <username: {user.username}> was created")
     return HTMLResponse(status_code=status.HTTP_201_CREATED)
 
 
-@router.post("/update-user/{user_id}")
-async def update_user(user_id: Annotated[int, Path()], form_user_data: Annotated[UserPostDTO, Depends(user_post_form)]):
-    new_user_data = UserDTO(
-        **form_user_data.model_dump(),
-        id=user_id
-    )
+@router.put("/update-user")
+async def update_user(
+        token_data: Annotated[TokenData, Depends(get_token_data)],
+        new_user_data: Annotated[UserPostDTO, Depends(get_user_post_form)]
+):
     try:
-        await Queries.update_user(new_user_data)
+        await Queries.update_user(token_data.id, new_user_data)
+    except ValueError as ex:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=ex.args,
+        )
+    Logger.info(f"User <id: {token_data.id}> was updated")
+
+
+@router.delete("/delete")
+async def delete_user(token_data: Annotated[TokenData, Depends(get_token_data)]):
+    try:
+        await Queries.delete_user(token_data.id)
     except ValueError as ex:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=ex.args[0],
         )
+    Logger.info(f"User <id: {token_data.id}> was deleted")
