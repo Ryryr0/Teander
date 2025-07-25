@@ -5,16 +5,16 @@ services:
 #      context: .\api-gateway
 #      dockerfile: Dockerfile
 #    ports:
-#      - "8080:8000"
+#      - "8001:8000"
 #    environment:
 #      - ENV=dev
 ##    depends_on:
 ##      - ms-auth
 #    restart: always
 
-  db-pgsql:
+  db-auth:
     image: postgres:latest
-    container_name: db-pgsql-auth
+    container_name: db-auth
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: my_own_password_123
@@ -27,17 +27,16 @@ services:
   ms-auth:
     container_name: ms-auth
     build:
-      context: .\auth_service
+      context: ./auth_service
       dockerfile: Dockerfile
     ports:
-      - "8080:8000"
-    volumes:
-      - ./auth_service/keys:/app/keys:ro
+      - "8000:8000"
     env_file:
       - auth_service/.env
     depends_on:
-      - db-pgsql
+      - db-auth
     restart: always
+
 volumes:
   postgres_data_auth:
     driver: local

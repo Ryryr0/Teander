@@ -6,8 +6,10 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY . .
+COPY ./src ./src
+
+ENV PYTHONPATH="${PYTHONPATH}:/app/src"
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "src/main.py", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

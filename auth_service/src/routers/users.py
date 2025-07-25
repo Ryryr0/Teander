@@ -18,7 +18,7 @@ from dependencies import get_user_post_form, get_token_data
 router = APIRouter(
     prefix="/users",
     tags=["users"],
-    responses={404: {"description": "User not found"}}
+    responses={404: {"description": "User not found"}},
 )
 
 
