@@ -1,16 +1,16 @@
 services:
-#  api-gateway:
-#    container_name: api-gateway
-#    build:
-#      context: .\api-gateway
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8001:8000"
-#    environment:
-#      - ENV=dev
-##    depends_on:
-##      - ms-auth
-#    restart: always
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - auth_service/.env
+    depends_on:
+      - ms-auth
+    restart: always
 
   db-auth:
     image: postgres:latest
@@ -30,7 +30,7 @@ services:
       context: ./auth_service
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8001"
     env_file:
       - auth_service/.env
     depends_on:
