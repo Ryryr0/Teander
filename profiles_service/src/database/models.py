@@ -1,18 +1,18 @@
 from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 
-from interfaces import IUserDB
-from schemas import UserPostDTO, UserDTO
+from interfaces import IUsersDB
+from schemas import UsersPostDTO, UsersDTO
 from .database import async_session_factory
 from ORM_models import UsersOrm
 from logger import Logger
 
 
-class UserDB(IUserDB):
-    async def create_user(self, new_user: UserPostDTO):
+class UsersDB(IUsersDB):
+    async def create_user(self, new_user: UsersPostDTO):
         async with async_session_factory() as session:
             try:
-                if await UserDB.__check_duplication_user(new_user):
+                if await UsersDB.__check_duplication_user(new_user):
                     session.add(UsersOrm(**new_user.model_dump()))
                 else:
                     return False
@@ -23,7 +23,7 @@ class UserDB(IUserDB):
             await session.commit()
         return True
 
-    async def get_user_by_id(self, user_id: int) -> UserDTO | None:
+    async def get_user_by_id(self, user_id: int) -> UsersDTO | None:
         async with async_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
@@ -34,15 +34,15 @@ class UserDB(IUserDB):
             await session.commit()
 
         if user_orm:
-            user = UserDTO.model_validate(user_orm, from_attributes=True)
+            user = UsersDTO.model_validate(user_orm, from_attributes=True)
         else:
             user = None
         return user
 
-    async def update_user_by_id(self, user_id: int, new_user_data: UserPostDTO) -> bool:
+    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
         async with async_session_factory() as session:
             try:
-                if await UserDB.__check_duplication_user(new_user_data):
+                if await UsersDB.__check_duplication_user(new_user_data):
                     user_orm = await session.get(UsersOrm, user_id)
                 else:
                     return False
@@ -71,7 +71,7 @@ class UserDB(IUserDB):
         return True
 
     @staticmethod
-    async def __check_duplication_user(user: UserPostDTO) -> bool:
+    async def __check_duplication_user(user: UsersPostDTO) -> bool:
         query = (
             select(
                 UsersOrm.username,
