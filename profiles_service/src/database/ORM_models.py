@@ -1,7 +1,21 @@
+from typing import Annotated
+from datetime import date
+
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import String, ForeignKey
+
+from schemas import Gender, ZodiacSign
+
+
+intpk = Annotated[int, mapped_column(primary_key=True)]
+str_256 = Annotated[str, 256]
 
 
 class Base(DeclarativeBase):
+    type_annotation_map = {
+        str_256: String(256)
+    }
+
     repr_cols_num = 3
     repr_cols = tuple()
 
@@ -17,8 +31,27 @@ class Base(DeclarativeBase):
 class UsersOrm(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
-    email: Mapped[str] = mapped_column(unique=True)
-    full_name: Mapped[str]
+    id: Mapped[intpk]
+    username: Mapped[str_256] = mapped_column(unique=True)
+    email: Mapped[str_256] = mapped_column(unique=True)
+    full_name: Mapped[str_256]
+    gender: Mapped[Gender]
+    birthday: Mapped[date | None]
+    zodiac_sign: Mapped[ZodiacSign | None]
+    description: Mapped[str | None]
     disabled: Mapped[bool] = mapped_column(default=False)
+
+
+class ImagesOrm(Base):
+    __tablename__ = "images"
+
+    id: Mapped[intpk]
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    url: Mapped[str]
+
+
+class ProfilePicturesOrm(Base):
+    __tablename__ = "profile_pictures"
+
+    image_id: Mapped[int] = mapped_column(ForeignKey("images.id", ondelete="SET NULL"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))

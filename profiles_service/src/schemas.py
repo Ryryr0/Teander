@@ -31,8 +31,8 @@ class UsersPostDTO(BaseModel):
     full_name: str
     gender: Gender
     birthday: date
-    age: int
-    zodiac_sing: ZodiacSign | None
+    age: int | None
+    zodiac_sign: ZodiacSign | None
     description: str | None
 
     @field_validator("age", mode="plain")
@@ -54,11 +54,11 @@ class UsersDTO(UsersPostDTO):
 class ImagesPostDTO(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    image_url: AnyUrl
+    id: int
+    url: AnyUrl
 
 
 class ImagesDTO(ImagesPostDTO):
-    id: int
     user_id: int
 
 
@@ -71,5 +71,5 @@ class FullProfilesDTO(ShortProfilesDTO):
     user_images: list[ImagesPostDTO]
 
 
-class ProfilesStack(BaseModel):
+class ProfilesStackDTO(BaseModel):
     profiles: list[ShortProfilesDTO]
