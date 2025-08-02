@@ -1,3 +1,4 @@
+import time
 from typing import Any
 from enum import Enum
 from datetime import date
@@ -35,8 +36,8 @@ class UsersPostDTO(BaseModel):
     zodiac_sign: ZodiacSign | None
     description: str | None
 
-    @field_validator("age", mode="plain")
     @classmethod
+    @field_validator("age", mode="plain")
     def count_age(cls, value: Any) -> int:
         birthday = cls.birthday
         if not birthday:
@@ -48,7 +49,7 @@ class UsersPostDTO(BaseModel):
 
 class UsersDTO(UsersPostDTO):
     id: int = Field(frozen=True)
-    disabled: bool
+    disabled: bool = False
 
 
 class ImagesPostDTO(BaseModel):
