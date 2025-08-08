@@ -18,7 +18,7 @@ class Logger:
     __handler = logging.StreamHandler(sys.stdout)
     __handler.setFormatter(JsonFormatter())
 
-    __logger = logging.getLogger("auth_service")
+    __logger = logging.getLogger("profiles_service")
     __logger.setLevel(logging.DEBUG)
     __logger.addHandler(__handler)
 

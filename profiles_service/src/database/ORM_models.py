@@ -34,8 +34,8 @@ class UsersOrm(Base):
     id: Mapped[intpk]
     username: Mapped[str_256] = mapped_column(unique=True)
     email: Mapped[str_256] = mapped_column(unique=True)
-    full_name: Mapped[str_256]
-    gender: Mapped[Gender]
+    full_name: Mapped[str_256 | None]
+    gender: Mapped[Gender | None]
     birthday: Mapped[date | None]
     zodiac_sign: Mapped[ZodiacSign | None]
     description: Mapped[str | None]
@@ -57,8 +57,8 @@ class ImagesOrm(Base):
 class ProfilePicturesOrm(Base):
     __tablename__ = "profile_pictures"
 
-    image_id: Mapped[int] = mapped_column(ForeignKey("images.id", ondelete="SET NULL"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    image_id: Mapped[int | None] = mapped_column(ForeignKey("images.id", ondelete="SET NULL"), nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
 
     image: Mapped["ImagesOrm"] = relationship(back_populates="profile_picture")
     user: Mapped["UsersOrm"] = relationship(back_populates="profile_picture")

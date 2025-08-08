@@ -37,6 +37,18 @@ services:
       - db-auth
     restart: always
 
+  db-profiles:
+    image: postgres:latest
+    container_name: db-profiles
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: my_own_password_123
+      POSTGRES_DB: users_profiles
+    volumes:
+      - postgres_data_auth:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
 volumes:
   postgres_data_auth:
     driver: local

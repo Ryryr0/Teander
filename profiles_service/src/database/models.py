@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from interfaces import IUsersDB, IImagesDB, IImagesStorage, IProfilePicturesDB
 from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO
-from ORM_models import UsersOrm, ImagesOrm, ProfilePicturesOrm
+from database.ORM_models import UsersOrm, ImagesOrm, ProfilePicturesOrm
 from logger import Logger
 
 
@@ -18,11 +18,11 @@ class UsersDB(IUsersDB):
     def __init__(self, a_session_factory: Callable[[], AsyncSession]):
         self.a_session_factory = a_session_factory
 
-    async def create_user(self, new_user: UsersPostDTO):
+    async def create_user(self, user_id: int, new_user: UsersPostDTO):
         async with self.a_session_factory() as session:
             try:
                 if await self.__check_duplication_user(new_user):
-                    session.add(UsersOrm(**new_user.model_dump()))
+                    session.add(UsersOrm(id=user_id, **new_user.model_dump()))
                 else:
                     return False
                 await session.commit()
@@ -36,6 +36,8 @@ class UsersDB(IUsersDB):
         async with self.a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
+                if user_orm.disabled is True:
+                    return None
             except IntegrityError as ex:
                 await session.rollback()
                 Logger.error(f"DataBase IntegrityError: {ex}")
@@ -47,16 +49,13 @@ class UsersDB(IUsersDB):
             user = None
         return user
 
-    async def update_user_by_id(self, user_id: int, new_user_data: UsersDTO) -> bool:
+    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
         async with self.a_session_factory() as session:
             try:
-                if await self.__check_duplication_user(new_user_data):
-                    user_orm = await session.get(UsersOrm, user_id)
-                else:
-                    return False
+                user_orm = await session.get(UsersOrm, user_id)
                 if user_orm:
                     for attr, value in new_user_data.model_dump().items():
-                        if attr not in ["id", "username", "email", "disabled"]:
+                        if attr not in ["username", "email"]:
                             setattr(user_orm, attr, value)
                 else:
                     return False
@@ -96,7 +95,7 @@ class UsersDB(IUsersDB):
             try:
                 exec_result = await session.execute(query)
                 results = exec_result.all()
-                if not results:
+                if results:
                     return False
             except IntegrityError as ex:
                 await session.rollback()
@@ -108,7 +107,7 @@ class UsersDB(IUsersDB):
 # Temporary solution
 class ImagesStorage(IImagesStorage):
     async def save_image(self, image: Image.Image) -> str:
-        return random.choices(string.ascii_letters + string.digits, k=20)
+        return "https://fake.com/" + "".join(random.choices(string.ascii_letters + string.digits, k=20))
 
     async def delete_image(self, image_id: int) -> bool:
         return True
@@ -135,7 +134,7 @@ class ImagesDB(IImagesDB):
                 results = exec_result.fetchall()
                 if results:
                     for record in results:
-                        images_list.append(ImagesPostDTO(id=record.id, url=record.url))
+                        images_list.append(ImagesPostDTO.model_validate(record, from_attributes=True))
             except IntegrityError as ex:
                 await session.rollback()
                 Logger.error(f"DataBase IntegrityError: {ex}")
@@ -143,7 +142,7 @@ class ImagesDB(IImagesDB):
         return images_list
 
     async def save_image(self, image: Image.Image, user_id: int) -> bool:
-        if not (url := self.images_storage.save_image(image)):
+        if not (url := await self.images_storage.save_image(image)):
             return False
 
         async with self.a_session_factory() as session:
@@ -165,7 +164,7 @@ class ImagesDB(IImagesDB):
         async with self.a_session_factory() as session:
             try:
                 await session.execute(query)
-                if not self.images_storage.delete_image(image_id):
+                if not await self.images_storage.delete_image(image_id):
                     await session.rollback()
                     return False
                 await session.commit()
@@ -180,6 +179,17 @@ class ProfilePicturesDB(IProfilePicturesDB):
     def __init__(self, a_session_factory: Callable[[], AsyncSession], images_storage: IImagesStorage):
         self.a_session_factory = a_session_factory
         self.images_storage = images_storage
+
+    async def create_profile_picture_for_user_id(self, user_id: int) -> bool:
+        async with self.a_session_factory() as session:
+            try:
+                session.add(ProfilePicturesOrm(user_id=user_id, image_id=None))
+                await session.commit()
+            except IntegrityError as ex:
+                await session.rollback()
+                Logger.error(f"DataBase IntegrityError: {ex}")
+                return False
+        return True
 
     async def get_profile_picture_by_user_id(self, user_id: int) -> ImagesPostDTO | None:
         query = (
@@ -198,10 +208,13 @@ class ProfilePicturesDB(IProfilePicturesDB):
                 await session.rollback()
                 Logger.error(f"DataBase IntegrityError: {ex}")
                 return None
-        return ImagesPostDTO(id=result.image.id, url=result.image.url)
+        if result.image:
+            return ImagesPostDTO.model_validate(result.image, from_attributes=True)
+        else:
+            return None
 
     async def save_profile_picture(self, image: Image.Image, user_id: int) -> bool:
-        if not (url := self.images_storage.save_image(image)):
+        if not (url := await self.images_storage.save_image(image)):
             return False
 
         async with self.a_session_factory() as session:
@@ -209,7 +222,11 @@ class ProfilePicturesDB(IProfilePicturesDB):
                 image_orm = ImagesOrm(url=url, user_id=user_id)
                 session.add(image_orm)
                 await session.flush()
-                session.add(ProfilePicturesOrm(user_id=user_id, image_id=image_orm.id))
+                profile_picture = await session.get(ProfilePicturesOrm, user_id)
+                if profile_picture:
+                    profile_picture.image_id = image_orm.id
+                else:
+                    session.add(ProfilePicturesOrm(user_id=user_id, image_id=image_orm.id))
                 await session.commit()
             except IntegrityError as ex:
                 await session.rollback()
@@ -219,15 +236,42 @@ class ProfilePicturesDB(IProfilePicturesDB):
 
     async def set_profile_picture(self, image_id: int, user_id: int) -> bool:
         query = (
-            select(UsersOrm)
-            .select_from(UsersOrm)
-            .filter(UsersOrm.id == user_id)
-            .options(joinedload(UsersOrm.profile_picture))
+            select(ProfilePicturesOrm)
+            .select_from(ProfilePicturesOrm)
+            .filter(ProfilePicturesOrm.user_id == user_id)
         )
 
         async with self.a_session_factory() as session:
             try:
-                ...
+                exec_result = await session.execute(query)
+                profile_picture = exec_result.scalars().first()
+                if not profile_picture:
+                    session.add(ProfilePicturesOrm(user_id=user_id, image_id=image_id))
+                else:
+                    profile_picture.image_id = image_id
+                await session.commit()
+            except IntegrityError as ex:
+                await session.rollback()
+                Logger.error(f"DataBase IntegrityError: {ex}")
+                return False
+        return True
+
+    async def delete_profile_picture(self, user_id: int) -> bool:
+        query = (
+            select(ProfilePicturesOrm)
+            .select_from(ProfilePicturesOrm)
+            .filter(ProfilePicturesOrm.user_id == user_id)
+        )
+
+        async with self.a_session_factory() as session:
+            try:
+                exec_result = await session.execute(query)
+                profile_picture = exec_result.scalars().first()
+                if not profile_picture:
+                    session.add(ProfilePicturesOrm(user_id=user_id, image_id=None))
+                else:
+                    profile_picture.image_id = None
+                await session.commit()
             except IntegrityError as ex:
                 await session.rollback()
                 Logger.error(f"DataBase IntegrityError: {ex}")
