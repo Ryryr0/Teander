@@ -111,7 +111,7 @@ class IProfilePictures(ABC):
         ...
 
     @abstractmethod
-    async def get_user_profile_picture(self, user_id: int) -> ImagesPostDTO:
+    async def get_user_profile_picture(self, user_id: int) -> ImagesPostDTO | None:
         ...
 
     @abstractmethod
@@ -129,7 +129,7 @@ class IProfilePictures(ABC):
 
 class IProfilesCacher(ABC):
     @abstractmethod
-    async def get_profile_by_user_id(self, user_id: int) -> ProfilesPostDTO:
+    async def get_profile_by_user_id(self, user_id: int) -> ProfilesPostDTO | None:
         ...
 
     @abstractmethod

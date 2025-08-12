@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: str
+
+    LOG_LVL: str
+
     @property
     def DATABASE_URL(self) -> str:
         # DSN

@@ -94,7 +94,7 @@ class UsersDB(IUsersDB):
         async with self.a_session_factory() as session:
             try:
                 exec_result = await session.execute(query)
-                results = exec_result.all()
+                results = exec_result.scalars().all()
                 if results:
                     return False
             except IntegrityError as ex:

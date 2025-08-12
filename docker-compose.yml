@@ -45,10 +45,20 @@ services:
       POSTGRES_PASSWORD: my_own_password_123
       POSTGRES_DB: users_profiles
     volumes:
-      - postgres_data_auth:/var/lib/postgresql/data
+      - postgres_data_profiles:/var/lib/postgresql/data
     ports:
       - "5433:5432"
 
+  redis-profile:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+#    command: ["redis-server", "--requirepass", "my_own_password_123"]
+
 volumes:
   postgres_data_auth:
+    driver: local
+  postgres_data_profiles:
     driver: local
