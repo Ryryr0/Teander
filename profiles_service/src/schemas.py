@@ -69,5 +69,14 @@ class ProfilesPostDTO(ShortProfilesDTO):
     images: list[ImagesPostDTO] | None = None
 
 
-class ProfilesStackDTO(BaseModel):
+class ProfileStackDTO(BaseModel):
     profiles: list[ShortProfilesDTO]
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    id: int
