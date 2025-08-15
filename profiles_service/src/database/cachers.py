@@ -18,7 +18,8 @@ class ProfileCacher(IProfilesCacher):
 
     async def get_profile_by_user_id(self, user_id: int) -> ProfilesPostDTO | None:
         async with self.__redis.pipeline(transaction=True) as pipe:
-            result = await pipe.get(f"profile:{user_id}").execute()
+            await pipe.get(f"profile:{user_id}") 
+            result = await pipe.execute()
         if result[0] is None:
             return None
         result = result[0].decode()

@@ -8,20 +8,20 @@ class Settings(BaseSettings):
         env_file="C:/Users/artem/Desktop/traineeship/pet_project/Teander/profiles_service/.env"
     )  # not need in docker
 
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASS: str
-    DB_NAME: str
+    DB_HOST: str = ""
+    DB_PORT: int = 0
+    DB_USER: str = ""
+    DB_PASS: str = ""
+    DB_NAME: str = ""
 
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_PASSWORD: str
+    REDIS_HOST: str = ""
+    REDIS_PORT: int = 0
+    REDIS_PASSWORD: str = ""
 
-    LOG_LVL: str
+    LOG_LVL: str = ""
 
     # For jwt token
-    ALGORITHM: str
+    ALGORITHM: str = ""
 
     @cached_property
     def DATABASE_URL(self) -> str:  # URl for sqlalchemy connection

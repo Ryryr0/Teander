@@ -1,4 +1,4 @@
-from PIL import Image
+from fastapi import UploadFile
 
 from interfaces import IProfilePictures, IProfilePicturesDB
 from schemas import ImagesPostDTO
@@ -17,7 +17,7 @@ class ProfilePictures(IProfilePictures):
     async def set_user_profile_picture(self, image_id: int, user_id: int) -> bool:
         return await self.__profile_picture_db.set_profile_picture(image_id, user_id)
 
-    async def save_user_profile_picture(self, image: Image.Image, user_id: int) -> bool:
+    async def save_user_profile_picture(self, image: UploadFile, user_id: int) -> bool:
         return await self.__profile_picture_db.save_profile_picture(image, user_id)
 
     async def delete_user_profile_picture(self, user_id) -> bool:

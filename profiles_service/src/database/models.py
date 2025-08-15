@@ -2,11 +2,11 @@ import random
 import string
 from typing import Callable
 
-from PIL import Image
 from sqlalchemy import select, or_, delete
 from sqlalchemy.orm import aliased, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import UploadFile
 
 from interfaces import IUsersDB, IImagesDB, IImagesStorage, IProfilePicturesDB
 from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO
@@ -35,8 +35,7 @@ class UsersDB(IUsersDB):
     async def get_user_by_id(self, user_id: int) -> UsersDTO | None:
         async with self.a_session_factory() as session:
             try:
-                user_orm = await session.get(UsersOrm, user_id)
-                if user_orm.disabled is True:
+                if (user_orm := await session.get(UsersOrm, user_id)) is None or user_orm.disabled is True:
                     return None
             except IntegrityError as ex:
                 await session.rollback()
@@ -69,7 +68,8 @@ class UsersDB(IUsersDB):
     async def delete_user_by_id(self, user_id: int) -> bool:
         async with self.a_session_factory() as session:
             try:
-                user = await session.get(UsersOrm, user_id)
+                if (user := await session.get(UsersOrm, user_id)) is None:
+                    return False
                 user.disabled = True
                 await session.commit()
             except IntegrityError as ex:
@@ -106,7 +106,7 @@ class UsersDB(IUsersDB):
 
 # Temporary solution
 class ImagesStorage(IImagesStorage):
-    async def save_image(self, image: Image.Image) -> str:
+    async def save_image(self, image: UploadFile) -> str:
         return "https://fake.com/" + "".join(random.choices(string.ascii_letters + string.digits, k=20))
 
     async def delete_image(self, image_id: int) -> bool:
@@ -141,7 +141,7 @@ class ImagesDB(IImagesDB):
                 return images_list
         return images_list
 
-    async def save_image(self, image: Image.Image, user_id: int) -> bool:
+    async def save_image(self, image: UploadFile, user_id: int) -> bool:
         if not (url := await self.images_storage.save_image(image)):
             return False
 
@@ -213,7 +213,7 @@ class ProfilePicturesDB(IProfilePicturesDB):
         else:
             return None
 
-    async def save_profile_picture(self, image: Image.Image, user_id: int) -> bool:
+    async def save_profile_picture(self, image: UploadFile, user_id: int) -> bool:
         if not (url := await self.images_storage.save_image(image)):
             return False
 

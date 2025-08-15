@@ -7,7 +7,7 @@ class Users(IUsers):
     def __init__(self, user_db: IUsersDB):
         self.__users_db = user_db
 
-    async def get_user(self, user_id: int) -> UsersDTO:
+    async def get_user(self, user_id: int) -> UsersDTO | None:
         return await self.__users_db.get_user_by_id(user_id)
 
     async def create_user(self, user_id: int, user_data: UsersPostDTO) -> bool:

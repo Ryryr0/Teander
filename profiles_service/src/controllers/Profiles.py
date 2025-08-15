@@ -1,4 +1,4 @@
-from PIL import Image
+from fastapi import UploadFile
 
 from interfaces import IProfiles, IProfilesCacher, IUsers, IProfilePictures, IImages
 from schemas import ProfilesPostDTO, UsersPostDTO, ShortProfilesDTO, ImagesPostDTO
@@ -50,7 +50,7 @@ class Profiles(IProfiles):
             return ShortProfilesDTO(**profile_post.model_dump())
 
         # Taking user from db
-        if user := await self.__users.get_user(user_id) is None:
+        if (user := await self.__users.get_user(user_id)) is None:
             return None
         profile_picture = await self.__profile_pictures.get_user_profile_picture(user_id)
         profile_post = ProfilesPostDTO(
@@ -75,38 +75,4 @@ class Profiles(IProfiles):
             return False
         Logger.info(f"Profile <id: {user_id}> was deleted")
         return True
-
-    async def add_image(self, image: Image.Image, user_id) -> bool:
-        await self.__profile_cacher.delete_cache(user_id)
-        if not await self.__images.save_user_image(image, user_id):
-            return False
-        Logger.info(f"Image was added for user <id: {user_id}>")
-        return True
-
-    async def delete_profile_picture(self, user_id: int) -> bool:
-        await self.__profile_cacher.delete_cache(user_id)
-        if not await self.__profile_pictures.delete_user_profile_picture(user_id):
-            return False
-        Logger.info(f"Profile picture was deleted from user <id: {user_id}>")
-        return True
-
-    async def add_profile_picture(self, image: Image.Image, user_id) -> bool:
-        await self.__profile_cacher.delete_cache(user_id)
-        if not await self.__profile_pictures.save_user_profile_picture(image, user_id):
-            return False
-        Logger.info(f"Profile picture was added for user <id: {user_id}>")
-        return True
-
-    async def delete_image(self, image_id: int, user_id: int) -> bool:
-        await self.__profile_cacher.delete_cache(user_id)
-        if not await self.__images.delete_user_images(image_id):
-            return False
-        Logger.info(f"Image was deleted from user <id: {user_id}>")
-        return True
-
-    async def set_profile_picture(self, image_id: int, user_id: int):
-        await self.__profile_cacher.delete_cache(user_id)
-        if not await self.__profile_pictures.set_user_profile_picture(image_id, user_id):
-            return False
-        Logger.info(f"Image <id: {image_id}> was set as profile picture for user <id: {user_id}>")
-        return True
+    

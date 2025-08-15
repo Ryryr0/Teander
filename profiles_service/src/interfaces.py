@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-from PIL import Image
-
+from fastapi import UploadFile
 from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO, ShortProfilesDTO
 
 
@@ -47,7 +46,7 @@ class IUsers(ABC):
 
 class IImagesDB(ABC):
     @abstractmethod
-    async def save_image(self, image: Image.Image, user_id: int) -> bool:
+    async def save_image(self, image: UploadFile, user_id: int) -> bool:
         ...
 
     @abstractmethod
@@ -61,7 +60,7 @@ class IImagesDB(ABC):
 
 class IImagesStorage(ABC):
     @abstractmethod
-    async def save_image(self, image: Image.Image) -> str:
+    async def save_image(self, image: UploadFile) -> str:
         ...
 
     @abstractmethod
@@ -75,7 +74,7 @@ class IImages(ABC):
         ...
 
     @abstractmethod
-    async def save_user_image(self, image: Image.Image, user_id) -> bool:
+    async def save_user_image(self, image: UploadFile, user_id) -> bool:
         ...
 
     @abstractmethod
@@ -93,7 +92,7 @@ class IProfilePicturesDB(ABC):
         ...
 
     @abstractmethod
-    async def save_profile_picture(self, image: Image.Image, user_id: int) -> bool:
+    async def save_profile_picture(self, image: UploadFile, user_id: int) -> bool:
         ...
 
     @abstractmethod
@@ -107,7 +106,7 @@ class IProfilePicturesDB(ABC):
 
 class IProfilePictures(ABC):
     @abstractmethod
-    async def create_profile_pictures(self, user_id: int):
+    async def create_profile_pictures(self, user_id: int) -> bool:
         ...
 
     @abstractmethod
@@ -115,7 +114,7 @@ class IProfilePictures(ABC):
         ...
 
     @abstractmethod
-    async def save_user_profile_picture(self, image: Image.Image, user_id: int) -> bool:
+    async def save_user_profile_picture(self, image: UploadFile, user_id: int) -> bool:
         ...
 
     @abstractmethod
@@ -160,24 +159,4 @@ class IProfiles(ABC):
 
     @abstractmethod
     async def delete_profile(self, user_id: int) -> bool:
-        ...
-
-    @abstractmethod
-    async def add_image(self, image: Image.Image, user_id) -> bool:
-        ...
-
-    @abstractmethod
-    async def delete_image(self, image_id: int, user_id: int) -> bool:
-        ...
-
-    @abstractmethod
-    async def delete_profile_picture(self, user_id: int) -> bool:
-        ...
-
-    @abstractmethod
-    async def add_profile_picture(self, image: Image.Image, user_id) -> bool:
-        ...
-
-    @abstractmethod
-    async def set_profile_picture(self, image_id: int, user_id: int):
         ...
