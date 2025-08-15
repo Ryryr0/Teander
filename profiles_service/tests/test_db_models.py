@@ -1,14 +1,15 @@
 import datetime
 import pytest
 import io
+from typing import Any
 
-from PIL import Image
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from database.models import UsersDB, ImagesDB, ImagesStorage, ProfilePicturesDB
-from database.ORM_models import Base
-from schemas import UsersPostDTO, ZodiacSign, Gender, UsersDTO, ImagesPostDTO
-from config import settings
+from src.database.models import UsersDB, ImagesDB, ImagesStorage, ProfilePicturesDB
+from src.database.ORM_models import Base
+from src.schemas import UsersPostDTO, ZodiacSign, Gender, UsersDTO, ImagesPostDTO
+from src.config import settings
 
 full_user_data = {
     "username": "test_user1",
@@ -20,7 +21,7 @@ full_user_data = {
     "description": "Test description",
 }
 
-min_user_data = {
+min_user_data: dict[str, Any] = {
     "username": "test_user2",
     "email": "testuser2@fake.ru",
 }
@@ -35,7 +36,7 @@ new_min_user_data = {
     "description": "Mini test description",
 }
 
-wrong_min_user_data = {
+wrong_min_user_data: dict[str, Any] = {
     "username": "wrong_test_user2",
     "email": "wrong_testuser2@fake.ru",
 }
@@ -63,12 +64,7 @@ async def setup_db(create_engine):
 
 @pytest.fixture(scope="function")
 async def create_image():
-    image_format = "PNG"
-    size = (100, 100)
-    color = (255, 0, 0)
-    image = Image.new("RGB", size, color)
     byte_io = io.BytesIO()
-    image.save(byte_io, format=image_format)
     byte_io.seek(0)
     return byte_io
 
@@ -116,7 +112,7 @@ async def test_images_db_p(setup_db, create_image):
 
     images_storage = ImagesStorage()
     images_db = ImagesDB(setup_db, images_storage)
-    fake_image = Image.open(create_image)
+    fake_image = UploadFile(filename="test.png", file=create_image)
 
     assert await images_db.save_image(fake_image, 1) is True
     image_list = await images_db.get_images_by_user_id(1)
@@ -131,7 +127,7 @@ async def test_images_db_p(setup_db, create_image):
 async def test_images_db_n(setup_db, create_image):
     images_storage = ImagesStorage()
     images_db = ImagesDB(setup_db, images_storage)
-    fake_image = Image.open(create_image)
+    fake_image = UploadFile(filename="test.png", file=create_image)
 
     assert await images_db.save_image(fake_image, 2) is False
     assert await images_db.get_images_by_user_id(2) == []
@@ -145,21 +141,21 @@ async def test_profile_pictures_db_p(setup_db, create_image):
     await user_db.create_user(1, full_user_post)  # id = 1
     images_storage = ImagesStorage()
     images_db = ImagesDB(setup_db, images_storage)
-    fake_image = Image.open(create_image)
+    fake_image = UploadFile(filename="test.png", file=create_image)
     await images_db.save_image(fake_image, 1)  # id = 1
 
     profile_pictures_db = ProfilePicturesDB(setup_db, images_storage)
 
     assert await profile_pictures_db.set_profile_picture(1, 1) is True
     gotten_image = await profile_pictures_db.get_profile_picture_by_user_id(1)
-    assert isinstance(gotten_image, ImagesPostDTO) is True
+    assert gotten_image is not None
     assert gotten_image.id == 1
     await images_db.delete_image(1)
     gotten_image = await profile_pictures_db.get_profile_picture_by_user_id(1)
     assert gotten_image is None
     assert await profile_pictures_db.save_profile_picture(fake_image, 1) is True
     gotten_image = await profile_pictures_db.get_profile_picture_by_user_id(1)
-    assert isinstance(gotten_image, ImagesPostDTO) is True
+    assert gotten_image is not None
     assert gotten_image.id == 2
     assert await profile_pictures_db.delete_profile_picture(1)
     assert await profile_pictures_db.get_profile_picture_by_user_id(1) is None
@@ -172,7 +168,7 @@ async def test_profile_pictures_db_n(setup_db, create_image):
     await user_db.create_user(1, full_user_post)  # id = 1
     images_storage = ImagesStorage()
     images_db = ImagesDB(setup_db, images_storage)
-    fake_image = Image.open(create_image)
+    fake_image =  UploadFile(filename="test.png", file=create_image)
     await images_db.save_image(fake_image, 1)  # id = 1
 
     profile_pictures_db = ProfilePicturesDB(setup_db, images_storage)

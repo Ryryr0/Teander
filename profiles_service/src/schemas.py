@@ -31,16 +31,17 @@ class UsersPostDTO(BaseModel):
     username: str = Field(frozen=True)
     email: EmailStr = Field(frozen=True)
     full_name: str | None = None
-    gender: Gender | None = None
+    gender: Gender | str | None = None
     birthday: date | None = None
-    zodiac_sign: ZodiacSign | None = None
+    zodiac_sign: ZodiacSign | str | None = None
     description: str | None = None
 
     @cached_property
     def age(self) -> int | None:
-        birthday = self.birthday
         today = date.today()
-        age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+        age = -1
+        if self.birthday is not None:
+            age = today.year - self.birthday.year - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
         return age
 
 
@@ -52,8 +53,8 @@ class UsersDTO(UsersPostDTO):
 class ImagesPostDTO(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    id: int | None
-    url: AnyUrl | None
+    id: int
+    url: AnyUrl
 
 
 class ImagesDTO(ImagesPostDTO):

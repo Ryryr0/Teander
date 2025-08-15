@@ -24,7 +24,7 @@ async def get_user_id(token: Annotated[str, Depends(oauth_scheme)]) -> int:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, await settings.PUBLIC_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.PUBLIC_KEY, algorithms=[settings.ALGORITHM])
         sub = payload.get("sub")
         if sub is None:
             raise credentials_exception

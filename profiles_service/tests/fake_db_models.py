@@ -1,9 +1,10 @@
 import itertools
 
-from PIL import Image
+from pydantic import AnyUrl
+from fastapi import UploadFile
 
-from interfaces import IUsersDB, IProfilePicturesDB, IImagesDB, IProfilesCacher
-from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO
+from src.interfaces import IUsersDB, IProfilePicturesDB, IImagesDB, IProfilesCacher
+from src.schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO
 
 
 class FakeUsersDB(IUsersDB):
@@ -48,10 +49,10 @@ class FakeImagesDB(IImagesDB):
         self._images: dict[int, ImagesPostDTO] = {}
         self._id_counter = itertools.count(1)
 
-    async def save_image(self, image: Image.Image, user_id: int) -> bool:
+    async def save_image(self, image: UploadFile, user_id: int) -> bool:
         try:
             new_id = next(self._id_counter)
-            img_dto = ImagesPostDTO(id=new_id, url=f"http://testserver/images/{new_id}")
+            img_dto = ImagesPostDTO(id=new_id, url=AnyUrl(f"http://testserver/images/{new_id}"))
             self._images[new_id] = img_dto
             return True
         except Exception:
@@ -87,7 +88,7 @@ class FakeProfilePicturesDB(IProfilePicturesDB):
                 return img
         return None
 
-    async def save_profile_picture(self, image: Image.Image, user_id: int) -> bool:
+    async def save_profile_picture(self, image: UploadFile, user_id: int) -> bool:
         success = await self._images_db.save_image(image, user_id)
         if not success:
             return False
