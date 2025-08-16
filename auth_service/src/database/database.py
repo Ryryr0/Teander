@@ -3,6 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from config import settings
 from logger import Logger
+from ORM_models import Base
 
 async_engine = create_async_engine(
     url=settings.DATABASE_URL,
@@ -14,17 +15,11 @@ async_engine = create_async_engine(
 async_session_factory = async_sessionmaker(async_engine)
 
 
-class Base(DeclarativeBase):
-    repr_cols_num = 3
-    repr_cols = tuple()
-
-    def __repr__(self):
-        cols = []
-        for idx, col in enumerate(self.__table__.columns.keys()):
-            if col in self.repr_cols or idx < self.repr_cols_num:
-                cols.append(f"{col}={getattr(self, col)}")
-
-        return f"<{self.__class__.__name__}: {', '.join(cols)}>"
+async def recreate_tables():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+        Logger.info("Tables recreated")
 
 
 async def create_tables():
