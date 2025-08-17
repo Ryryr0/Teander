@@ -1,26 +1,64 @@
-from database.models import UsersDB
-from interfaces import IUsers, IUsersDB
-from schemas import UsersDTO, UsersPostDTO
+from passlib.context import CryptContext
+
+from interfaces import IUsers, IUsersDB, ISynchronizer
+from schemas import UsersDTO, UsersPostDTO, UsersSendDTO
 from logger import Logger
 
 
 class Users(IUsers):
-    def __init__(self, users_db: IUsersDB, synchronizer: ):
+    def __init__(self, users_db: IUsersDB, synchronizer: ISynchronizer):
         self.users_db = users_db
         self.synchronizer = synchronizer
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    async def create_user(self, new_user: UsersPostDTO, hashed_password: str) -> bool:
-        if not await self.users_db.create_user(new_user, hashed_password):
+    async def create_user(self, new_user: UsersPostDTO, password: str) -> bool:
+        if not await self.users_db.create_user(new_user, self._hash_password(password)):
             return False
         Logger.info(f"User <username: {new_user.username} created>")
-
+        # Sending new user to other services
+        if (user := await self._get_user(new_user.username)) is None:
+            return False
+        await self._synchronize_user(user)
+        return True
+    
+    async def update_user(self, user_id: int, new_user_date: UsersPostDTO) -> bool:
+        if not await self.users_db.update_user_by_id(user_id, new_user_date):
+            return False
+        Logger.info(f"User <id: {user_id}> updated")
+        # Sending updated user to other services
+        await self._synchronize_user(UsersDTO(id=user_id, **new_user_date.model_dump()))
         return True
 
-    async def get_user(self, username: str) -> UsersDTO | None:
+    async def update_password(self, user_id: int, new_hashed_password: str) -> bool:
+        if not await self.users_db.update_password_by_user_id(user_id, new_hashed_password):
+            return False
+        Logger.info(f"User's <id: {user_id}> password updated")
+        return True
+    
+    async def verify_user(self, username: str, password: str) -> UsersDTO | None:
+        if (user := await self._get_user(username)) is None:
+            return None
+        Logger.info(f"User <username: {username}> verified")
+        if not self.pwd_context.verify(password, user.hashed_password):
+            return None
+        return user
+    
+    async def delete_user(self, user_id) -> bool:
+        if not await self.users_db.delete_user_by_id(user_id):
+            return False
+        Logger.info(f"User <id: {user_id}> deleted")
+        return True
+    
+    async def _get_user(self, username: str) -> UsersDTO | None:
         return await self.users_db.get_user_by_username(username)
 
-    async def update_user(self, new_user_date: UsersPostDTO) -> bool:
-        ...
-
-    async def update_password(self, user_id: int, new_hashed_password: str) -> bool:
-        ...
+    async def _synchronize_user(self, user: UsersDTO) -> bool:
+        user_for_sending = UsersSendDTO(**user.model_dump())
+        if not await self.synchronizer.send_user(user_for_sending):
+            Logger.warning(f"User <id: {user.id}> was not sent to other services")
+            return False
+        Logger.info(f"User <id: {user.id}> sent to other services ")
+        return True
+        
+    def _hash_password(self, password: str) -> str:
+        return self.pwd_context.hash(password)

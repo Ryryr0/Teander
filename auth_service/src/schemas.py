@@ -7,14 +7,14 @@ class UsersPostDTO(BaseModel):
 
 
 class UsersDTO(UsersPostDTO):
-    id: int | None = None
+    id: int
     hashed_password: str
     disabled: bool = False
 
 
-# class UserSendDTO(BaseModel):
-#     id: int
-#     disabled: bool
+class UsersSendDTO(UsersPostDTO):
+    id: int
+    disabled: bool = False
 
 
 class Token(BaseModel):

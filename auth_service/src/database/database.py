@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from config import settings
 from logger import Logger
-from ORM_models import Base
+from .ORM_models import Base
 
 async_engine = create_async_engine(
     url=settings.DATABASE_URL,

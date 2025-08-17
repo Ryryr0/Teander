@@ -1,21 +1,25 @@
-from jwt.exceptions import InvalidTokenError
 from typing import Annotated
-import jwt
 
+import jwt
+from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status, Form
 
 from config import settings
 from logger import Logger
-from schemas import TokenData, UserPostDTO, UserDTO
-from database.queries import Queries
+from schemas import TokenData, UsersPostDTO
+from controllers import Users
+from database.models import UsersDB
+from database.database import async_session_factory
+from synchronizer import Synchronizer
+from interfaces import IUsers
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
 
-def get_user_post_form(username: Annotated[str, Form()], email: Annotated[str, Form()]) -> UserPostDTO:
-    user = UserPostDTO(
+def get_user_post_form(username: Annotated[str, Form()], email: Annotated[str, Form()]) -> UsersPostDTO:
+    user = UsersPostDTO(
         username=username,
         email=email,
     )
@@ -39,6 +43,14 @@ def get_token_data(jwt_token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     Logger.info(f"User's <id: {token_data.id}> token was verified")
     return token_data
+
+
+def get_users() -> IUsers:
+    return Users(UsersDB(async_session_factory), Synchronizer())
+
+
+# Shortcuts types
+GetUsers = Annotated[IUsers, Depends(get_users)]
 
 
 # async def get_current_user(token_data: Annotated[TokenData, Depends(get_token_data)]):

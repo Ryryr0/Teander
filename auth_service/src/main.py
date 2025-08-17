@@ -1,15 +1,27 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from config import settings
 from routers import users
-
 from database.database import create_tables
+from logger import Logger
+from synchronizer import Synchronizer
 
-from fastapi.testclient import TestClient
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if not await Synchronizer.send_public_key():
+        Logger.warning(f"Public key was not sent")
+    else:
+        Logger.info(f"Public key sent")
+    await create_tables()
+    yield
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,9 +33,5 @@ app.add_middleware(
 app.include_router(users.router)
 
 
-@app.on_event("startup")
-async def on_startup():
-    await create_tables()
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)

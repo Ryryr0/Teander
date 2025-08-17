@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from schemas import UsersPostDTO, UsersDTO
+from schemas import UsersPostDTO, UsersSendDTO, UsersDTO
 
 
 class IUsersDB(ABC):
@@ -27,27 +27,27 @@ class IUsersDB(ABC):
 
 class IUsers(ABC):
     @abstractmethod
-    async def create_user(self, new_user: UsersPostDTO, hashed_password: str) -> bool:
+    async def create_user(self, new_user: UsersPostDTO, password: str) -> bool:
         ...
 
     @abstractmethod
-    async def get_user(self, username: str) -> UsersDTO | None:
-        ...
-
-    @abstractmethod
-    async def update_user(self, new_user_date: UsersPostDTO) -> bool:
+    async def update_user(self, user_id: int, new_user_date: UsersPostDTO) -> bool:
         ...
 
     @abstractmethod
     async def update_password(self, user_id: int, new_hashed_password: str) -> bool:
         ...
 
-
-class ISynchronizer(ABC):
     @abstractmethod
-    async def send_user(self, user: UsersDTO) -> bool:
+    async def verify_user(self, username: str, password: str) -> UsersDTO | None:
         ...
 
     @abstractmethod
-    async def send_public_key(self) -> bool:
+    async def delete_user(self, user_id) -> bool:
+        ...
+
+
+class ISynchronizer(ABC):
+    @abstractmethod
+    async def send_user(self, user: UsersSendDTO) -> bool:
         ...

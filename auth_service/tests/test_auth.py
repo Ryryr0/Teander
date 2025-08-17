@@ -15,7 +15,7 @@ client = TestClient(app)
 
 def test_reg():
     response_reg = client.post(
-        "/users/reg",
+        "/users",
         data={
             "username": "test_user_1",
             "email": "testuser1@gmail.com",
@@ -57,7 +57,7 @@ def test_update():
     token = response_token.json()
 
     response_update = client.put(
-        "/users/update-user",
+        "/users",
         headers={
             "Authorization:": f"{token["token_type"]} {token["access_token"]}",
         },
@@ -85,7 +85,7 @@ def test_delete():
     token = response_token.json()
 
     response_delete = client.post(
-        "/users/delete",
+        "/users",
         headers={
             "Authorization:": f"{token["token_type"]} {token["access_token"]}",
         },
