@@ -18,18 +18,18 @@ router.include_router(profile_pictures.router)
 router.include_router(stacks.router)
 
 
-@router.post(path="")
-async def create_profile(
-        user_id: UserId,
-        user_data: Annotated[UsersPostDTO, Body()],
-        profiles: GetProfile,
-):
-    if not await profiles.create_profile(user_id, user_data):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="User already exist or wrong data",
-        )
-    return Response(status_code=status.HTTP_201_CREATED)
+# @router.post(path="")
+# async def create_profile(
+#         user_id: UserId,
+#         user_data: Annotated[UsersPostDTO, Body()],
+#         profiles: GetProfile,
+# ):
+#     if not await profiles.create_profile(user_id, user_data):
+#         raise HTTPException(
+#             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+#             detail="User already exist or wrong data",
+#         )
+#     return Response(status_code=status.HTTP_201_CREATED)
 
 
 @router.get(path="", response_model=ProfilesPostDTO)

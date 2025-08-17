@@ -1,20 +1,20 @@
 from pydantic import BaseModel, EmailStr
 
 
-class UserPostDTO(BaseModel):
+class UsersPostDTO(BaseModel):
     username: str
     email: EmailStr
 
 
-class UserDTO(UserPostDTO):
+class UsersDTO(UsersPostDTO):
     id: int | None = None
     hashed_password: str
     disabled: bool = False
 
 
-class UserSendDTO(BaseModel):
-    id: int
-    disabled: bool
+# class UserSendDTO(BaseModel):
+#     id: int
+#     disabled: bool
 
 
 class Token(BaseModel):

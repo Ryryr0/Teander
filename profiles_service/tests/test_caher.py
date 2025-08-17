@@ -1,7 +1,7 @@
 import time
 
-from src.database.cachers import ProfileCacher
-from src.schemas import ProfilesPostDTO, UsersPostDTO
+from database.cachers import ProfileCacher
+from schemas import ProfilesPostDTO, UsersPostDTO
 
 
 async def test_cacher():

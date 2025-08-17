@@ -1,4 +1,9 @@
+from typing import Annotated
+
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+
+
+str_256 = Annotated[str, 256]
 
 
 class Base(DeclarativeBase):
@@ -18,7 +23,7 @@ class UsersOrm(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
-    email: Mapped[str] = mapped_column(unique=True)
+    username: Mapped[str_256] = mapped_column(unique=True)
+    email: Mapped[str_256] = mapped_column(unique=True)
     hashed_password: Mapped[str]
     disabled: Mapped[bool]

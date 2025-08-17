@@ -5,10 +5,10 @@ import datetime
 import pytest
 from PIL import Image
 
-from src.controllers import *
+from controllers import *
 from fastapi import UploadFile
 from fake_db_models import FakeUsersDB, FakeImagesDB, FakeProfilesCacher, FakeProfilePicturesDB
-from src.schemas import ZodiacSign, Gender, UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO, ShortProfilesDTO
+from schemas import ZodiacSign, Gender, UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO, ShortProfilesDTO
 
 
 full_user_data = {

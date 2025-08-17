@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from config import settings
 from database.queries import Queries
 from logger import Logger
-from schemas import Token, UserDTO, UserPostDTO, TokenData
+from schemas import Token, UsersDTO, UserPostsDTO, TokenData
 from dependencies import get_user_post_form, get_token_data
 
 

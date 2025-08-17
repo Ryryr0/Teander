@@ -1,38 +1,47 @@
 import os
+from functools import cached_property
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # model_config = SettingsConfigDict(
-    #     env_file="C:/Users/artem/Desktop/traineeship/pet_project/Teander/auth_service/.env"
-    # )  # not need in docker
+    if os.environ.get("IS_DOCKER") == "false":
+        model_config = SettingsConfigDict(
+            env_file="auth_service/.env"
+        )
 
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASS: str
-    DB_NAME: str
+    DB_HOST: str = ""
+    DB_PORT: int = 1
+    DB_USER: str = ""
+    DB_PASS: str = ""
+    DB_NAME: str = ""
 
-    PRIVATE_KEY_PATH: str
-    PUBLIC_KEY_PATH: str
-    ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    PRIVATE_KEY_PATH: str = ""
+    PUBLIC_KEY_PATH: str = ""
+    ALGORITHM: str = ""
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1
 
-    # idk how to keep it correctly
+    # Sites allowed to request
     ORIGINS: list[str] = ["*"]
 
-    @property
+    # Kafka
+    KAFKA_BOOTSTRAP_SERVERS: str = ""
+    # Topics
+    KAFKA_PUBLIC_KEY_TOPIC: str = ""
+    KAFKA_USERS_TOPIC: str = ""
+
+    IS_DOCKER: bool = True
+
+    @cached_property
     def DATABASE_URL(self) -> str:
-        # DSN
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    @property
+    @cached_property
     def PRIVATE_KEY(self) -> bytes:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../keys/private.pem"), "rb") as f:
             return f.read()
 
-    @property
+    @cached_property
     def PUBLIC_KEY(self) -> bytes:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../keys/public.pem"), "rb") as f:
             return f.read()

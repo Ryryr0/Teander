@@ -5,12 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import user_profiles, images, profile_pictures, stacks
 from config import settings
+from logger import Logger
+from database.database import create_tables
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Getting public key before start 
+    # Getting public key before start
     await settings.get_public_key()
+    Logger.info(f"Public key received")
+    await create_tables()
     yield
 
 

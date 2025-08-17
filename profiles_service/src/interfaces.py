@@ -18,7 +18,7 @@ class IUsersDB(ABC):
         ...
 
     @abstractmethod
-    async def delete_user_by_id(self, user_id) -> bool:
+    async def delete_user_by_id(self, user_id: int) -> bool:
         ...
 
 
@@ -29,7 +29,7 @@ class IUsers(ABC):
         ...
 
     @abstractmethod
-    async def get_user(self, user_id: int) -> UsersPostDTO:
+    async def get_user(self, user_id: int) -> UsersPostDTO | None:
         """Get user from db by id"""
         ...
 
@@ -74,7 +74,7 @@ class IImages(ABC):
         ...
 
     @abstractmethod
-    async def save_user_image(self, image: UploadFile, user_id) -> bool:
+    async def save_user_image(self, image: UploadFile, user_id: int) -> bool:
         ...
 
     @abstractmethod
@@ -122,7 +122,7 @@ class IProfilePictures(ABC):
         ...
 
     @abstractmethod
-    async def delete_user_profile_picture(self, user_id) -> bool:
+    async def delete_user_profile_picture(self, user_id: int) -> bool:
         ...
 
 
@@ -136,7 +136,7 @@ class IProfilesCacher(ABC):
         ...
 
     @abstractmethod
-    async def delete_cache(self, user_id) -> bool:
+    async def delete_cache(self, user_id: int) -> bool:
         ...
 
 
@@ -159,4 +159,10 @@ class IProfiles(ABC):
 
     @abstractmethod
     async def delete_profile(self, user_id: int) -> bool:
+        ...
+
+    
+class ISynchronizer(ABC):
+    @abstractmethod
+    async def start(self):
         ...

@@ -1,3 +1,4 @@
+import os
 from functools import cached_property
 
 from aiokafka import AIOKafkaConsumer
@@ -5,9 +6,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file="C:/Users/artem/Desktop/traineeship/pet_project/Teander/profiles_service/.env"
-    )  # does not need in docker
+    if os.environ.get("IS_DOCKER") == "false":
+        model_config = SettingsConfigDict(
+            env_file="profiles_service/.env"
+        )
 
     # PostgresSQL db
     DB_HOST: str = ""
@@ -26,8 +28,12 @@ class Settings(BaseSettings):
 
     # Kafka
     KAFKA_BOOTSTRAP_SERVERS: str = ""
-    KAFKA_PUBLIC_KEY_TOPIC: str = ""
+    # Groups
     KAFKA_PUBLIC_KEY_GROUP: str = ""
+    KAFKA_USERS_GROUP: str = ""
+    # Topics
+    KAFKA_PUBLIC_KEY_TOPIC: str = ""
+    KAFKA_USERS_TOPIC: str = ""
 
     # Sites allowed to do requests
     ORIGINS: list[str] = ["*"]
@@ -57,6 +63,7 @@ class Settings(BaseSettings):
             async for msg in consumer:
                 if isinstance(msg.value, bytes):
                     self._public_key = msg.value.decode()
+                    break
         finally:
             await consumer.stop()
 

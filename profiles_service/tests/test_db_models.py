@@ -6,10 +6,10 @@ from typing import Any
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from src.database.models import UsersDB, ImagesDB, ImagesStorage, ProfilePicturesDB
-from src.database.ORM_models import Base
-from src.schemas import UsersPostDTO, ZodiacSign, Gender, UsersDTO, ImagesPostDTO
-from src.config import settings
+from database.models import UsersDB, ImagesDB, ImagesStorage, ProfilePicturesDB
+from database.ORM_models import Base
+from schemas import UsersPostDTO, ZodiacSign, Gender, UsersDTO, ImagesPostDTO
+from config import settings
 
 full_user_data = {
     "username": "test_user1",

@@ -3,8 +3,8 @@ import itertools
 from pydantic import AnyUrl
 from fastapi import UploadFile
 
-from src.interfaces import IUsersDB, IProfilePicturesDB, IImagesDB, IProfilesCacher
-from src.schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO
+from interfaces import IUsersDB, IProfilePicturesDB, IImagesDB, IProfilesCacher
+from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO
 
 
 class FakeUsersDB(IUsersDB):
