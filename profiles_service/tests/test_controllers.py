@@ -3,7 +3,6 @@ import io
 import datetime
 
 import pytest
-from PIL import Image
 
 from controllers import *
 from fastapi import UploadFile
@@ -56,12 +55,7 @@ def create_all_controllers():
 
 @pytest.fixture(scope="function")
 async def create_image():
-    image_format = "PNG"
-    size = (100, 100)
-    color = (255, 0, 0)
-    image = Image.new("RGB", size, color)
     byte_io = io.BytesIO()
-    image.save(byte_io, format=image_format)
     byte_io.seek(0)
     return byte_io
 

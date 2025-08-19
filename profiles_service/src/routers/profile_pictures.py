@@ -1,6 +1,5 @@
 from typing import Annotated
 
-from PIL import Image
 from fastapi.routing import APIRouter
 from fastapi import UploadFile, Path, HTTPException, status, Response
 

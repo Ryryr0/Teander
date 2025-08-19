@@ -9,6 +9,7 @@ from logger import Logger
 from database.database import create_tables
 from synchronizer import Synchronizer
 from database.models import UsersDB
+from database.database import async_session_factory
 from controllers import Users
 
 
@@ -20,8 +21,11 @@ async def lifespan(app: FastAPI):
     else:
         Logger.warning(f"Public key was not received")
     await create_tables()
-    synchronizer = Synchronizer()
+    # Creating synchronizer and starting it
+    synchronizer = Synchronizer(Users(UsersDB(async_session_factory)))
+    await synchronizer.start()
     yield
+    Logger.info(f"Auth-service ended")
 
 
 app = FastAPI(lifespan=lifespan)
