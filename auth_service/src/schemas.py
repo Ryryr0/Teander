@@ -7,7 +7,7 @@ class UsersPostDTO(BaseModel):
 
 
 class UsersDTO(UsersPostDTO):
-    id: int
+    id: int | None = None
     hashed_password: str
     disabled: bool = False
 

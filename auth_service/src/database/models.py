@@ -12,15 +12,15 @@ from interfaces import IUsersDB
 
 class UsersDB(IUsersDB):
     def __init__(self, a_session_factory: Callable[[], AsyncSession]):
-        self.a_session_factory = a_session_factory
+        self.__a_session_factory = a_session_factory
 
     async def create_user(self, new_user: UsersPostDTO, hashed_password: str) -> bool:
-        async with self.a_session_factory() as session:
+        new_user_dto = UsersDTO(**new_user.model_dump(), hashed_password=hashed_password)
+        async with self.__a_session_factory() as session:
             try:
                 if not await self.__check_duplication_user_data(new_user):
                     return False
-                new_user_orm = UsersOrm(**new_user.model_dump())
-                new_user_orm.hashed_password = hashed_password
+                new_user_orm = UsersOrm(**new_user_dto.model_dump())
                 session.add(new_user_orm)
                 await session.commit()
             except IntegrityError as ex:
@@ -36,7 +36,7 @@ class UsersDB(IUsersDB):
             .filter_by(username=username)
         )
         user = None
-        async with self.a_session_factory() as session:
+        async with self.__a_session_factory() as session:
             try:
                 exec_result = await session.execute(query)
                 result = exec_result.scalars().first()
@@ -49,7 +49,7 @@ class UsersDB(IUsersDB):
         return user
     
     async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
-        async with self.a_session_factory() as session:
+        async with self.__a_session_factory() as session:
             try:
                 if not await self.__check_duplication_user_data(new_user_data):
                     return False
@@ -66,7 +66,7 @@ class UsersDB(IUsersDB):
         return True
 
     async def delete_user_by_id(self, user_id) -> bool:
-        async with self.a_session_factory() as session:
+        async with self.__a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
                 if user_orm is None:
@@ -89,12 +89,13 @@ class UsersDB(IUsersDB):
                     ))
                 )
                 
-        async with self.a_session_factory() as session:
+        async with self.__a_session_factory() as session:
             try:
                 exec_result = await session.execute(query)
                 results = exec_result.scalars().fetchall()
                 for record in results:
                     if new_user_data.username == record.username:
+                        Logger.debug(f"{new_user_data.username=} | {record.username=}")
                         return False
                     if new_user_data.email == record.email:
                         return False
@@ -104,7 +105,7 @@ class UsersDB(IUsersDB):
         return True
 
     async def update_password_by_user_id(self, user_id: int, new_hashed_password: str) -> bool:
-        async with self.a_session_factory() as session:
+        async with self.__a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
                 if user_orm is None:

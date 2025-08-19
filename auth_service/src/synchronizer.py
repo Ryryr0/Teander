@@ -6,24 +6,22 @@ from config import settings
 
 
 class Synchronizer(ISynchronizer):
-    def __init__(self):
-        self.__producer = AIOKafkaProducer(
-            bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-            enable_idempotence=True,
-        )
-
     async def send_user(self, user: UsersSendDTO) -> bool:
+        __producer = AIOKafkaProducer(
+            bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
+            # enable_idempotence=True,
+        )
         user_data = user.model_dump_json().encode()
 
-        await self.__producer.start()
+        await __producer.start()
         try:
-            result = await self.__producer.send_and_wait(
+            result = await __producer.send_and_wait(
                 settings.KAFKA_USERS_TOPIC,
                 value=user_data,
             )
             return result is not None
         finally:
-            await self.__producer.stop()
+            await __producer.stop()
 
     @staticmethod
     async def send_public_key():

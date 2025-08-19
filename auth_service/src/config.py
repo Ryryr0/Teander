@@ -5,9 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    if os.environ.get("IS_DOCKER") == "false":
+    if os.environ.get("IS_DOCKER") is None or os.environ.get("IS_DOCKER") == "false":
         model_config = SettingsConfigDict(
-            env_file="auth_service/.env"
+            env_file="../auth_service/.env"
         )
 
     DB_HOST: str = ""
@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     KAFKA_PUBLIC_KEY_TOPIC: str = ""
     KAFKA_USERS_TOPIC: str = ""
 
+    LOG_LVL: str = ""
+    
     IS_DOCKER: bool = True
 
     @cached_property

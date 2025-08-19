@@ -26,7 +26,9 @@ class Users(IUsers):
             return False
         Logger.info(f"User <id: {user_id}> updated")
         # Sending updated user to other services
-        await self._synchronize_user(UsersDTO(id=user_id, **new_user_date.model_dump()))
+        if (user := await self._get_user(new_user_date.username)) is None:
+            return False
+        await self._synchronize_user(user)
         return True
 
     async def update_password(self, user_id: int, new_hashed_password: str) -> bool:

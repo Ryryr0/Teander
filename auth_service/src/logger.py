@@ -2,6 +2,8 @@ import logging
 import json
 import sys
 
+from config import settings
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -19,7 +21,7 @@ class Logger:
     __handler.setFormatter(JsonFormatter())
 
     __logger = logging.getLogger("auth_service")
-    __logger.setLevel(logging.DEBUG)
+    __logger.setLevel(settings.LOG_LVL)
     __logger.addHandler(__handler)
 
     @classmethod

@@ -76,6 +76,7 @@ async def update_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username or email is already used",
         )
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.put("/password")

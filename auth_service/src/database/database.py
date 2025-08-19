@@ -15,11 +15,11 @@ async_engine = create_async_engine(
 async_session_factory = async_sessionmaker(async_engine)
 
 
-async def recreate_tables():
+async def delete_tables():
     async with async_engine.begin() as conn:
+        Logger.info("Start deleting tables")
         await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-        Logger.info("Tables recreated")
+        Logger.info("Tables deleted")
 
 
 async def create_tables():
