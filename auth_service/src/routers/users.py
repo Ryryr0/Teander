@@ -100,6 +100,6 @@ async def delete_user(
 ):
     if not await users.delete_user(token_data.id):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
         )

@@ -40,7 +40,7 @@ class UsersDB(IUsersDB):
             try:
                 exec_result = await session.execute(query)
                 result = exec_result.scalars().first()
-                if result is None:
+                if result is None or result.disabled:
                     return None
                 user = UsersDTO.model_validate(result, from_attributes=True)
             except IntegrityError as ex:
@@ -54,7 +54,7 @@ class UsersDB(IUsersDB):
                 if not await self.__check_duplication_user_data(new_user_data):
                     return False
                 user_orm = await session.get(UsersOrm, user_id)
-                if user_orm is None:
+                if user_orm is None or user_orm.disabled:
                     return False
                 for key, item in new_user_data.model_dump().items():
                     setattr(user_orm, key, item)
@@ -69,7 +69,7 @@ class UsersDB(IUsersDB):
         async with self.__a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
-                if user_orm is None:
+                if user_orm is None or user_orm.disabled:
                     return False
                 user_orm.disabled = True
                 await session.commit()
@@ -108,7 +108,7 @@ class UsersDB(IUsersDB):
         async with self.__a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
-                if user_orm is None:
+                if user_orm is None or user_orm.disabled:
                     return False
                 user_orm.hashed_password = new_hashed_password
                 await session.commit()

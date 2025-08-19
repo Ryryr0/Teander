@@ -29,8 +29,7 @@ class Settings(BaseSettings):
     # Kafka
     KAFKA_BOOTSTRAP_SERVERS: str = ""
     # Groups
-    KAFKA_PUBLIC_KEY_GROUP: str = ""
-    KAFKA_USERS_GROUP: str = ""
+    KAFKA_GROUP: str = ""
     # Topics
     KAFKA_PUBLIC_KEY_TOPIC: str = ""
     KAFKA_USERS_TOPIC: str = ""
@@ -52,11 +51,10 @@ class Settings(BaseSettings):
         """Public key for jwt decoding"""
         return self._public_key
     
-    async def get_public_key(self):
+    async def get_public_key(self) -> bool:
         consumer = AIOKafkaConsumer(
             self.KAFKA_PUBLIC_KEY_TOPIC,
             bootstrap_servers=self.KAFKA_BOOTSTRAP_SERVERS,
-            group_id=self.KAFKA_PUBLIC_KEY_GROUP,
         )
         await consumer.start()
         try:
@@ -66,20 +64,6 @@ class Settings(BaseSettings):
                     break
         finally:
             await consumer.stop()
-
-    # @property
-    # def PUBLIC_KEY(self) -> str:
-    #     return """
-    #     -----BEGIN PUBLIC KEY-----
-    #     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyrt9oclp166oK5lB0jmy
-    #     N1FwiO1vgO9HGJgLD59UXRjJgEuoP0HYBNgmoOAFNMRp8C5Tgog+NCGEn8+CoGSD
-    #     WJU6Mb/HHnK+p8Q/SflbRkLPobJcW7k17+InpNiJzDsOpS6GT845+1Z2k03nacLl
-    #     Ni2jLfD0pv3TdZWEH7IK1OeX5koEqIPwRtAPSbc6zSzE1GfxPm9+g6md633rwGpz
-    #     dvG9djm1m+6yVirKE9iTr2Zy5G5unIHLKxmQ0q8Pp0PIiUjK2iw5F9lMaIICIOp0
-    #     HYgdoaq9Rmy3KAVUHebuQosAONdXFFx/4LXarSqmoeS/z1M4mJijIHdKofmQGVBs
-    #     SQIDAQAB
-    #     -----END PUBLIC KEY-----
-    #     """
-
+        return bool(self._public_key)
 
 settings = Settings()

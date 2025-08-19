@@ -1,16 +1,16 @@
 services:
-  api-gateway:
-    container_name: api-gateway
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    ports:
-      - 8000:8000
-    env_file:
-      - auth_service/.env
-    depends_on:
-      - ms-auth
-    restart: always
+  # api-gateway:
+  #   container_name: api-gateway
+  #   build:
+  #     context: ./api-gateway
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8000:8000
+  #   env_file:
+  #     - auth_service/.env
+  #   depends_on:
+  #     - ms-auth
+  #   restart: always
 
   db-auth:
     image: postgres:latest
@@ -35,6 +35,23 @@ services:
       - auth_service/.env
     depends_on:
       - db-auth
+      - kafka-init
+    restart: always
+
+  ms-profiles:
+    container_name: ms-profiles
+    build:
+      context: ./profiles_service
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8002
+    env_file:
+      - profiles_service/.env
+    depends_on:
+      - db-profiles
+      - ms-auth
+      - kafka-init
+      - redis-profiles
     restart: always
 
   db-profiles:
@@ -49,9 +66,9 @@ services:
     ports:
       - 5433:5432
 
-  redis-profile:
+  redis-profiles:
     image: redis:7.2-alpine
-    container_name: redis
+    container_name: redis-profiles
     restart: unless-stopped
     ports:
       - 6379:6379
@@ -72,6 +89,13 @@ services:
       - 9092:9092
       - 9094:9094
 
+  kafka-init:
+    image: bitnami/kafka:latest
+    depends_on:
+      - kafka
+    volumes:
+      - ./kafka-topics-init.sh:/kafka-topics-init.sh
+    entrypoint: ["/bin/bash", "/kafka-topics-init.sh"]
 
 volumes:
   postgres_data_auth:

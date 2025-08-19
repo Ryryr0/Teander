@@ -12,8 +12,10 @@ from database.database import create_tables
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Getting public key before start
-    await settings.get_public_key()
-    Logger.info(f"Public key received")
+    if await settings.get_public_key():
+        Logger.info(f"Public key received")
+    else:
+        Logger.warning(f"Public key was not received")
     await create_tables()
     yield
 
