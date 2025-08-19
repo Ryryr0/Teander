@@ -7,6 +7,9 @@ from routers import user_profiles, images, profile_pictures, stacks
 from config import settings
 from logger import Logger
 from database.database import create_tables
+from synchronizer import Synchronizer
+from database.models import UsersDB
+from controllers import Users
 
 
 @asynccontextmanager
@@ -17,6 +20,7 @@ async def lifespan(app: FastAPI):
     else:
         Logger.warning(f"Public key was not received")
     await create_tables()
+    synchronizer = Synchronizer()
     yield
 
 
