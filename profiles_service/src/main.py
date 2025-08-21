@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,8 @@ from controllers import Users
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Getting public key before start
+    Logger.info("Receiving public key...")
+    Logger.info(settings.DATABASE_URL)
     if await settings.get_public_key():
         Logger.info(f"Public key received")
     else:
@@ -23,12 +26,14 @@ async def lifespan(app: FastAPI):
     await create_tables()
     # Creating synchronizer and starting it
     synchronizer = Synchronizer(Users(UsersDB(async_session_factory)))
-    await synchronizer.start()
+    synch_task = asyncio.create_task(synchronizer.start())
     yield
+    synch_task.cancel()
     Logger.info(f"Auth-service ended")
 
 
 app = FastAPI(lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ORIGINS,

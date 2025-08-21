@@ -14,7 +14,7 @@ class IUsersDB(ABC):
         ...
 
     @abstractmethod
-    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
+    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
         ...
 
     @abstractmethod
@@ -34,7 +34,7 @@ class IUsers(ABC):
         ...
 
     @abstractmethod
-    async def update_user(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
+    async def update_user(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
         """Update user in db"""
         ...
 

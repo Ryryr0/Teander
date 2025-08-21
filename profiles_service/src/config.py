@@ -1,7 +1,7 @@
 import os
 from functools import cached_property
 
-from aiokafka import AIOKafkaConsumer
+from aiokafka import AIOKafkaConsumer, TopicPartition
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,9 +37,12 @@ class Settings(BaseSettings):
     # Sites allowed to do requests
     ORIGINS: list[str] = ["*"]
 
+    # Auth-service path for token
+    AUTH_SERVICE_TOKEN: str = ""
+
     # For jwt token
     ALGORITHM: str = ""
-    _public_key = ""
+    _public_key: bytes = b""
 
     @cached_property
     def DATABASE_URL(self) -> str:
@@ -47,7 +50,7 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
-    def PUBLIC_KEY(self) -> str:
+    def PUBLIC_KEY(self) -> bytes:
         """Public key for jwt decoding"""
         return self._public_key
     
@@ -55,15 +58,16 @@ class Settings(BaseSettings):
         consumer = AIOKafkaConsumer(
             self.KAFKA_PUBLIC_KEY_TOPIC,
             bootstrap_servers=self.KAFKA_BOOTSTRAP_SERVERS,
+            auto_offset_reset="earliest",
         )
         await consumer.start()
         try:
-            async for msg in consumer:
-                if isinstance(msg.value, bytes):
-                    self._public_key = msg.value.decode()
-                    break
+            msg = await consumer.getone()
+            if isinstance(msg.value, bytes):
+                self._public_key = msg.value
+                return bool(self._public_key)
         finally:
             await consumer.stop()
-        return bool(self._public_key)
+        return False
 
 settings = Settings()

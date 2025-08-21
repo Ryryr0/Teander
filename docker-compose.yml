@@ -50,7 +50,6 @@ services:
     depends_on:
       - db-profiles
       - ms-auth
-      - kafka-init
       - redis-profiles
     restart: always
 

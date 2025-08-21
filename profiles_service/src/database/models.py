@@ -48,13 +48,15 @@ class UsersDB(IUsersDB):
             user = None
         return user
 
-    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
+    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
         async with self.a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
                 if user_orm:
                     for attr, value in new_user_data.model_dump().items():
-                        if attr not in ["username", "email"]:
+                        if allow_main_data_changes:
+                            setattr(user_orm, attr, value)
+                        elif attr not in ["username", "email"]:
                             setattr(user_orm, attr, value)
                 else:
                     return False

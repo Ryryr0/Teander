@@ -28,10 +28,14 @@ class Synchronizer(ISynchronizer):
                 if not isinstance(msg.value, bytes):
                     Logger.warning(f"Unknown values received from kafka")
                     continue
-                user_data = json.loads(msg.value.decode())
-                user = UsersDTO(**user_data)
-                if not await self.users.create_user(user.id, UsersPostDTO(**user.model_dump())):
-                    Logger.warning(f"User, received from kafka topic: {settings.KAFKA_USERS_TOPIC}, not created")
+                msg = json.loads(msg.value.decode())
+                user = UsersDTO(**msg["user_data"])
+                if msg["operation"] == "create":
+                    if not await self.users.create_user(user.id, UsersPostDTO(**user.model_dump())):
+                        Logger.warning(f"User, received from kafka topic: {settings.KAFKA_USERS_TOPIC}, not created")
+                elif msg["operation"] == "update":
+                    if not await self.users.update_user(user.id, UsersPostDTO(**user.model_dump()), allow_main_data_changes=True):
+                        Logger.warning(f"User, received from kafka topic: {settings.KAFKA_USERS_TOPIC}, not updated")
         except asyncio.CancelledError:
             Logger.info(f"Kafka synchronizer consumer cancelled")
         finally:

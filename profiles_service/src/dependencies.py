@@ -13,8 +13,10 @@ from database.models import UsersDB, ImagesDB, ProfilePicturesDB, ImagesStorage
 from database.cachers import ProfileCacher
 from database.database import async_session_factory
 from interfaces import IProfiles, IProfilePictures, IImages
+from config import settings
 
-oauth_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="/user-profiles/token")
 
 
 async def get_user_id(token: Annotated[str, Depends(oauth_scheme)]) -> int:

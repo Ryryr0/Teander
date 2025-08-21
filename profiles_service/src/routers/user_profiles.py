@@ -1,11 +1,13 @@
 from typing import Annotated
+import httpx
 
 from fastapi.routing import APIRouter
-from fastapi import Body, Depends, HTTPException, status, Response
+from fastapi import Body, Depends, HTTPException, status, Response, Request
 
 from . import images, profile_pictures, stacks
-from schemas import ProfilesPostDTO, UsersPostDTO
+from schemas import ProfilesPostDTO, UsersPostDTO, ShortProfilesDTO
 from dependencies import UserId, GetProfile
+from config import settings
 
 
 router = APIRouter(
@@ -18,18 +20,15 @@ router.include_router(profile_pictures.router)
 router.include_router(stacks.router)
 
 
-# @router.post(path="")
-# async def create_profile(
-#         user_id: UserId,
-#         user_data: Annotated[UsersPostDTO, Body()],
-#         profiles: GetProfile,
-# ):
-#     if not await profiles.create_profile(user_id, user_data):
-#         raise HTTPException(
-#             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#             detail="User already exist or wrong data",
-#         )
-#     return Response(status_code=status.HTTP_201_CREATED)
+@router.post("/token")
+async def get_token(request: Request):
+    """Proxy to auth-service token endpoint"""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            settings.AUTH_SERVICE_TOKEN,
+            data=await request.form()
+        )
+    return response.json()
 
 
 @router.get(path="", response_model=ProfilesPostDTO)
@@ -42,7 +41,7 @@ async def get_profile(user_id: UserId, profiles: GetProfile):
     return profile
 
 
-@router.get(path="/short", response_model=ProfilesPostDTO)
+@router.get(path="/short", response_model=ShortProfilesDTO)
 async def get_short_profile(user_id: UserId, profiles: GetProfile):
     if (short_profile := await profiles.get_short_profile(user_id)) is None:
         raise HTTPException(

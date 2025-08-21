@@ -18,8 +18,8 @@ class Users(IUsers):
         Logger.info(f"User <{user_data.username}> was created")
         return True
 
-    async def update_user(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
-        if not await self.__users_db.update_user_by_id(user_id, new_user_data):
+    async def update_user(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
+        if not await self.__users_db.update_user_by_id(user_id, new_user_data, allow_main_data_changes):
             return False
         Logger.info(f"User <id: {user_id}> was updated")
         return True

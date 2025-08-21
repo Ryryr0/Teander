@@ -18,7 +18,7 @@ class Users(IUsers):
         # Sending new user to other services
         if (user := await self._get_user(new_user.username)) is None:
             return False
-        await self._synchronize_user(user)
+        await self._synchronize_user(user, "create")
         return True
     
     async def update_user(self, user_id: int, new_user_date: UsersPostDTO) -> bool:
@@ -28,7 +28,7 @@ class Users(IUsers):
         # Sending updated user to other services
         if (user := await self._get_user(new_user_date.username)) is None:
             return False
-        await self._synchronize_user(user)
+        await self._synchronize_user(user, "update")
         return True
 
     async def update_password(self, user_id: int, new_hashed_password: str) -> bool:
@@ -54,9 +54,9 @@ class Users(IUsers):
     async def _get_user(self, username: str) -> UsersDTO | None:
         return await self.users_db.get_user_by_username(username)
 
-    async def _synchronize_user(self, user: UsersDTO) -> bool:
+    async def _synchronize_user(self, user: UsersDTO, operation: str) -> bool:
         user_for_sending = UsersSendDTO(**user.model_dump())
-        if not await self.synchronizer.send_user(user_for_sending):
+        if not await self.synchronizer.send_user(user_for_sending, operation):
             Logger.warning(f"User <id: {user.id}> was not sent to other services")
             return False
         Logger.info(f"User <id: {user.id}> sent to other services ")

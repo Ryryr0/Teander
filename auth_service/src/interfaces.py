@@ -49,5 +49,5 @@ class IUsers(ABC):
 
 class ISynchronizer(ABC):
     @abstractmethod
-    async def send_user(self, user: UsersSendDTO) -> bool:
+    async def send_user(self, user: UsersSendDTO, operation: str) -> bool:
         ...
