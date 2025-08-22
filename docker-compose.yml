@@ -1,16 +1,15 @@
 services:
-  # api-gateway:
-  #   container_name: api-gateway
-  #   build:
-  #     context: ./api-gateway
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 8000:8000
-  #   env_file:
-  #     - auth_service/.env
-  #   depends_on:
-  #     - ms-auth
-  #   restart: always
+  nginx-gateway:
+    container_name: nginx-gateway
+    build:
+      context: ./nginx-gateway
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      - ms-auth
+      - ms-profiles
+    restart: always
 
   db-auth:
     image: postgres:latest

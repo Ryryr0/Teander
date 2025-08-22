@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     Logger.info(f"Auth-service ended")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path="profiles")
 
 app.add_middleware(
     CORSMiddleware,
