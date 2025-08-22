@@ -1,12 +1,12 @@
 # Файлы окружения
-.env
+# .env
 .venv/
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.pem
+# *.pem
 .pytest_cache
 
 # Конфигурации и логи
