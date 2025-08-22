@@ -10,13 +10,13 @@ from schemas import Token, TokenData
 from logger import Logger
 from controllers import Profiles, Users, ProfilePictures, Images
 from database.models import UsersDB, ImagesDB, ProfilePicturesDB, ImagesStorage
-from database.cachers import ProfileCacher
+from database.cachers import ProfileCacher, CacheCleaner
 from database.database import async_session_factory
 from interfaces import IProfiles, IProfilePictures, IImages
 from config import settings
 
 
-oauth_scheme = OAuth2PasswordBearer(tokenUrl="/user-profiles/token")
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="/profiles/user-profiles/token")
 
 
 async def get_user_id(token: Annotated[str, Depends(oauth_scheme)]) -> int:
@@ -45,11 +45,12 @@ def create_profiles_controller() -> IProfiles:
     images_db = ImagesDB(async_session_factory, images_storage)
     profile_pictures_db = ProfilePicturesDB(async_session_factory, images_storage)
     profile_cacher = ProfileCacher()
+    cache_cleaner = CacheCleaner()
 
     # Controllers creation
-    users = Users(users_db)
-    images = Images(images_db)
-    profile_pictures = ProfilePictures(profile_pictures_db)
+    users = Users(users_db, cache_cleaner)
+    images = Images(images_db, cache_cleaner)
+    profile_pictures = ProfilePictures(profile_pictures_db, cache_cleaner)
 
     profiles = Profiles(
         users=users,
@@ -63,13 +64,15 @@ def create_profiles_controller() -> IProfiles:
 def create_profile_pictures_controller() -> IProfilePictures:
     images_storage = ImagesStorage()
     profile_pictures_db = ProfilePicturesDB(async_session_factory, images_storage)
-    return ProfilePictures(profile_pictures_db)
+    cache_cleaner = CacheCleaner()
+    return ProfilePictures(profile_pictures_db, cache_cleaner)
 
 
 def create_images_controller() -> IImages:
     images_storage = ImagesStorage()
     images_db = ImagesDB(async_session_factory, images_storage)
-    return Images(images_db)
+    cache_cleaner = CacheCleaner()
+    return Images(images_db, cache_cleaner)
 
 
 # Commonly used types

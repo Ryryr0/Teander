@@ -11,6 +11,7 @@ from database.database import create_tables
 from synchronizer import Synchronizer
 from database.models import UsersDB
 from database.database import async_session_factory
+from database.cachers import CacheCleaner
 from controllers import Users
 
 
@@ -18,21 +19,20 @@ from controllers import Users
 async def lifespan(app: FastAPI):
     # Getting public key before start
     Logger.info("Receiving public key...")
-    Logger.info(settings.DATABASE_URL)
     if await settings.get_public_key():
         Logger.info(f"Public key received")
     else:
         Logger.warning(f"Public key was not received")
     await create_tables()
     # Creating synchronizer and starting it
-    synchronizer = Synchronizer(Users(UsersDB(async_session_factory)))
+    synchronizer = Synchronizer(Users(UsersDB(async_session_factory), CacheCleaner()))
     synch_task = asyncio.create_task(synchronizer.start())
     yield
     synch_task.cancel()
     Logger.info(f"Auth-service ended")
 
 
-app = FastAPI(lifespan=lifespan, root_path="profiles")
+app = FastAPI(lifespan=lifespan, root_path="/profiles")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +42,3 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(user_profiles.router)
-app.include_router(images.router)
-app.include_router(profile_pictures.router)
-app.include_router(stacks.router)

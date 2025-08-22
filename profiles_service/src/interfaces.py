@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from fastapi import UploadFile
-from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO, ShortProfilesDTO
+from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesDTO, ShortProfilesDTO
 
 
 class IUsersDB(ABC):
@@ -54,7 +54,7 @@ class IImagesDB(ABC):
         ...
 
     @abstractmethod
-    async def delete_image(self, image_id: int) -> bool:
+    async def delete_image(self, image_id: int, user_id: int) -> bool:
         ...
 
 
@@ -78,7 +78,7 @@ class IImages(ABC):
         ...
 
     @abstractmethod
-    async def delete_user_images(self, image_id: int) -> bool:
+    async def delete_user_images(self, image_id: int, user_id: int) -> bool:
         ...
 
 
@@ -126,17 +126,19 @@ class IProfilePictures(ABC):
         ...
 
 
-class IProfilesCacher(ABC):
-    @abstractmethod
-    async def get_profile_by_user_id(self, user_id: int) -> ProfilesPostDTO | None:
-        ...
-
-    @abstractmethod
-    async def cache_profile(self, user_id: int, profile: ProfilesPostDTO) -> bool:
-        ...
-
+class ICacheCleaner(ABC):
     @abstractmethod
     async def delete_cache(self, user_id: int) -> bool:
+        ...
+
+
+class IProfilesCacher(ICacheCleaner):
+    @abstractmethod
+    async def get_profile_by_user_id(self, user_id: int) -> ProfilesDTO | None:
+        ...
+
+    @abstractmethod
+    async def cache_profile(self, user_id: int, profile: ProfilesDTO) -> bool:
         ...
 
 
@@ -146,7 +148,7 @@ class IProfiles(ABC):
         ...
 
     @abstractmethod
-    async def get_profile(self, user_id: int) -> ProfilesPostDTO | None:
+    async def get_profile(self, user_id: int) -> ProfilesDTO | None:
         ...
 
     @abstractmethod

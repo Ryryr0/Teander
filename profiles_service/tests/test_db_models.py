@@ -119,7 +119,7 @@ async def test_images_db_p(setup_db, create_image):
     assert len(image_list) == 1
     assert isinstance(image_list[0], ImagesPostDTO) is True
     assert image_list[0].id == 1
-    assert await images_db.delete_image(1) is True
+    assert await images_db.delete_image(1, 1) is True
     image_list = await images_db.get_images_by_user_id(1)
     assert len(image_list) == 0
 
@@ -150,7 +150,7 @@ async def test_profile_pictures_db_p(setup_db, create_image):
     gotten_image = await profile_pictures_db.get_profile_picture_by_user_id(1)
     assert gotten_image is not None
     assert gotten_image.id == 1
-    await images_db.delete_image(1)
+    await images_db.delete_image(1, 1)
     gotten_image = await profile_pictures_db.get_profile_picture_by_user_id(1)
     assert gotten_image is None
     assert await profile_pictures_db.save_profile_picture(fake_image, 1) is True

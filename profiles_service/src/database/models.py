@@ -2,7 +2,7 @@ import random
 import string
 from typing import Callable
 
-from sqlalchemy import select, or_, delete
+from sqlalchemy import select, or_, delete, and_
 from sqlalchemy.orm import aliased, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,6 +49,8 @@ class UsersDB(IUsersDB):
         return user
 
     async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
+        if not await self.__check_duplication_user(new_user_data, user_id=user_id):
+            return False
         async with self.a_session_factory() as session:
             try:
                 user_orm = await session.get(UsersOrm, user_id)
@@ -80,12 +82,9 @@ class UsersDB(IUsersDB):
                 return False
         return True
 
-    async def __check_duplication_user(self, user: UsersPostDTO) -> bool:
+    async def __check_duplication_user(self, user: UsersPostDTO, user_id: int | None = None) -> bool:
         query = (
-            select(
-                UsersOrm.username,
-                UsersOrm.email,
-            )
+            select(UsersOrm)
             .select_from(UsersOrm)
             .filter(or_(
                 UsersOrm.username == user.username,
@@ -97,8 +96,16 @@ class UsersDB(IUsersDB):
             try:
                 exec_result = await session.execute(query)
                 results = exec_result.scalars().all()
-                if results:
-                    return False
+                if not results:
+                    return True
+                if user_id is None:
+                    if results:
+                        return False
+                for record in results:
+                    if record.id == user_id:
+                        continue
+                    else:
+                        return False
             except IntegrityError as ex:
                 await session.rollback()
                 Logger.error(f"DataBase IntegrityError: {ex}")
@@ -157,10 +164,13 @@ class ImagesDB(IImagesDB):
                 return False
         return True
 
-    async def delete_image(self, image_id: int) -> bool:
+    async def delete_image(self, image_id: int, user_id: int) -> bool:
         query = (
             delete(ImagesOrm)
-            .where(ImagesOrm.id == image_id)
+            .where(and_(
+                ImagesOrm.id == image_id,
+                ImagesOrm.user_id == user_id,
+            ))
         )
 
         async with self.a_session_factory() as session:

@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 
 from interfaces import IProfiles, IProfilesCacher, IUsers, IProfilePictures, IImages
-from schemas import ProfilesPostDTO, UsersPostDTO, ShortProfilesDTO, ImagesPostDTO
+from schemas import ProfilesDTO, UsersPostDTO, ShortProfilesDTO, ImagesPostDTO
 from logger import Logger
 
 
@@ -24,7 +24,7 @@ class Profiles(IProfiles):
         Logger.info(f"Profile <id: {user_id}> was created")
         return await self.__profile_pictures.create_profile_pictures(user_id)
 
-    async def get_profile(self, user_id: int) -> ProfilesPostDTO | None:
+    async def get_profile(self, user_id: int) -> ProfilesDTO | None:
         # Check profile in cache
         if (profile_post := await self.__profile_cacher.get_profile_by_user_id(user_id)) is not None:
             return profile_post
@@ -34,14 +34,14 @@ class Profiles(IProfiles):
             return None
         profile_picture = await self.__profile_pictures.get_user_profile_picture(user_id)
         images = await self.__images.get_user_images(user_id)
-        profile_post = ProfilesPostDTO(
+        profile_post = ProfilesDTO(
+            id=user_id,
             user=user,
             profile_picture=profile_picture,
             images=images,
         )
         # Cache profile
-        if await self.__profile_cacher.cache_profile(user_id, profile_post):
-            Logger.info(f"Profile <id: {user_id}> was cached")
+        await self.__profile_cacher.cache_profile(user_id, profile_post)
         return profile_post
 
     async def get_short_profile(self, user_id: int):
@@ -53,13 +53,13 @@ class Profiles(IProfiles):
         if (user := await self.__users.get_user(user_id)) is None:
             return None
         profile_picture = await self.__profile_pictures.get_user_profile_picture(user_id)
-        profile_post = ProfilesPostDTO(
+        profile_post = ProfilesDTO(
+            id=user_id,
             user=user,
             profile_picture=profile_picture,
         )
         # Cache profile
-        if await self.__profile_cacher.cache_profile(user_id, profile_post):
-            Logger.info(f"Short profile <id: {id}> was cached")
+        await self.__profile_cacher.cache_profile(user_id, profile_post)
         return profile_post
 
     async def update_profile(self, user_id: int, new_user_data: UsersPostDTO) -> bool:

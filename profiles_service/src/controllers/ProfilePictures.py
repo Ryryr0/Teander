@@ -1,12 +1,13 @@
 from fastapi import UploadFile
 
-from interfaces import IProfilePictures, IProfilePicturesDB
+from interfaces import IProfilePictures, IProfilePicturesDB, ICacheCleaner
 from schemas import ImagesPostDTO
 
 
 class ProfilePictures(IProfilePictures):
-    def __init__(self, profile_picture_db: IProfilePicturesDB):
+    def __init__(self, profile_picture_db: IProfilePicturesDB, cache_cleaner: ICacheCleaner):
         self.__profile_picture_db = profile_picture_db
+        self.__cache_cleaner = cache_cleaner
 
     async def create_profile_pictures(self, user_id: int) -> bool:
         return await self.__profile_picture_db.create_profile_picture_for_user_id(user_id)
@@ -15,10 +16,16 @@ class ProfilePictures(IProfilePictures):
         return await self.__profile_picture_db.get_profile_picture_by_user_id(user_id)
 
     async def set_user_profile_picture(self, image_id: int, user_id: int) -> bool:
-        return await self.__profile_picture_db.set_profile_picture(image_id, user_id)
+        result = await self.__profile_picture_db.set_profile_picture(image_id, user_id)
+        await self.__cache_cleaner.delete_cache(user_id)
+        return result
 
     async def save_user_profile_picture(self, image: UploadFile, user_id: int) -> bool:
-        return await self.__profile_picture_db.save_profile_picture(image, user_id)
+        result = await self.__profile_picture_db.save_profile_picture(image, user_id)
+        await self.__cache_cleaner.delete_cache(user_id)
+        return result
 
     async def delete_user_profile_picture(self, user_id) -> bool:
-        return await self.__profile_picture_db.delete_profile_picture(user_id)
+        result = await self.__profile_picture_db.delete_profile_picture(user_id)
+        await self.__cache_cleaner.delete_cache(user_id)
+        return result

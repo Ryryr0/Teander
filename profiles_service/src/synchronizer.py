@@ -36,6 +36,9 @@ class Synchronizer(ISynchronizer):
                 elif msg["operation"] == "update":
                     if not await self.users.update_user(user.id, UsersPostDTO(**user.model_dump()), allow_main_data_changes=True):
                         Logger.warning(f"User, received from kafka topic: {settings.KAFKA_USERS_TOPIC}, not updated")
+                elif msg["operation"] == "delete":
+                    if not await self.users.delete_user(user.id):
+                        Logger.warning(f"User, received from kafka topic: {settings.KAFKA_USERS_TOPIC}, not deleted")
         except asyncio.CancelledError:
             Logger.info(f"Kafka synchronizer consumer cancelled")
         finally:

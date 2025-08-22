@@ -1,12 +1,12 @@
 import time
 
 from database.cachers import ProfileCacher
-from schemas import ProfilesPostDTO, UsersPostDTO
+from schemas import ProfilesDTO, UsersPostDTO
 
 
 async def test_cacher():
     pc = ProfileCacher()
-    profile = ProfilesPostDTO(user=UsersPostDTO(username="user1", email="user1@gmail.com"))
+    profile = ProfilesDTO(id=1, user=UsersPostDTO(username="user1", email="user1@gmail.com"))
 
     assert await pc.cache_profile(1, profile)
     assert await pc.get_profile_by_user_id(1) == profile

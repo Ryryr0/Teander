@@ -26,9 +26,9 @@ async def add_image(user_id: UserId, image: UploadFile, images: GetImages):
 
 @router.delete(path="/{image_id}")
 async def delete_image(user_id: UserId, image_id: Annotated[int, Path()], images: GetImages):
-    if not await images.delete_user_images(image_id):
+    if not await images.delete_user_images(image_id, user_id):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Something went wrong, try again"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found"
         )
     return Response(status_code=status.HTTP_200_OK)

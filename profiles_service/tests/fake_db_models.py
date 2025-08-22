@@ -4,7 +4,7 @@ from pydantic import AnyUrl
 from fastapi import UploadFile
 
 from interfaces import IUsersDB, IProfilePicturesDB, IImagesDB, IProfilesCacher
-from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO
+from schemas import UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesDTO
 
 
 class FakeUsersDB(IUsersDB):
@@ -23,7 +23,7 @@ class FakeUsersDB(IUsersDB):
     async def get_user_by_id(self, user_id: int) -> UsersDTO | None:
         return self._users.get(user_id)
 
-    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
+    async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO, allow_main_data_changes: bool = False) -> bool:
         if user_id not in self._users:
             return False
         existing_user = self._users[user_id]
@@ -61,7 +61,7 @@ class FakeImagesDB(IImagesDB):
     async def get_images_by_user_id(self, user_id: int) -> list[ImagesPostDTO]:
         return [dto for _, dto in self._images.items()]
 
-    async def delete_image(self, image_id: int) -> bool:
+    async def delete_image(self, image_id: int, user_id: int) -> bool:
         print("del", self._images)
         return self._images.pop(image_id, None) is not None
 
@@ -114,12 +114,12 @@ class FakeProfilePicturesDB(IProfilePicturesDB):
 
 class FakeProfilesCacher(IProfilesCacher):
     def __init__(self):
-        self._cache: dict[int, ProfilesPostDTO] = {}
+        self._cache: dict[int, ProfilesDTO] = {}
 
-    async def get_profile_by_user_id(self, user_id: int) -> ProfilesPostDTO | None:
+    async def get_profile_by_user_id(self, user_id: int) -> ProfilesDTO | None:
         return self._cache.get(user_id)
 
-    async def cache_profile(self, user_id: int, profile: ProfilesPostDTO) -> bool:
+    async def cache_profile(self, user_id: int, profile: ProfilesDTO) -> bool:
         self._cache[user_id] = profile
         return True
 

@@ -19,10 +19,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
 
 def get_user_post_form(username: Annotated[str, Form()], email: Annotated[str, Form()]) -> UsersPostDTO:
-    user = UsersPostDTO(
-        username=username,
-        email=email,
-    )
+    try:
+        user = UsersPostDTO(
+            username=username,
+            email=email,
+        )
+    except ValueError as ex:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(ex))
     return user
 
 

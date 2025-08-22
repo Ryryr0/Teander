@@ -1,11 +1,12 @@
-from interfaces import IUsersDB, IUsers
+from interfaces import IUsersDB, IUsers, ICacheCleaner
 from schemas import UsersPostDTO, UsersDTO
 from logger import Logger
 
 
 class Users(IUsers):
-    def __init__(self, user_db: IUsersDB):
+    def __init__(self, user_db: IUsersDB, cache_cleaner: ICacheCleaner):
         self.__users_db = user_db
+        self.__cache_cleaner = cache_cleaner
 
     async def get_user(self, user_id: int) -> UsersPostDTO | None:
         if (user := await self.__users_db.get_user_by_id(user_id)) is None:
@@ -22,10 +23,12 @@ class Users(IUsers):
         if not await self.__users_db.update_user_by_id(user_id, new_user_data, allow_main_data_changes):
             return False
         Logger.info(f"User <id: {user_id}> was updated")
+        await self.__cache_cleaner.delete_cache(user_id)
         return True
 
     async def delete_user(self, user_id: int) -> bool:
         if not await self.__users_db.delete_user_by_id(user_id):
             return False
         Logger.info(f"User <id: {user_id}> was deleted")
+        await self.__cache_cleaner.delete_cache(user_id)
         return True

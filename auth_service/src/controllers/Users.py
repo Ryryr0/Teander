@@ -1,4 +1,5 @@
 from passlib.context import CryptContext
+from passlib.exc import InvalidHashError, UnknownHashError
 
 from interfaces import IUsers, IUsersDB, ISynchronizer
 from schemas import UsersDTO, UsersPostDTO, UsersSendDTO
@@ -32,7 +33,7 @@ class Users(IUsers):
         return True
 
     async def update_password(self, user_id: int, new_hashed_password: str) -> bool:
-        if not await self.users_db.update_password_by_user_id(user_id, new_hashed_password):
+        if not await self.users_db.update_password_by_user_id(user_id, self._hash_password(new_hashed_password)):
             return False
         Logger.info(f"User's <id: {user_id}> password updated")
         return True
@@ -41,14 +42,19 @@ class Users(IUsers):
         if (user := await self._get_user(username)) is None:
             return None
         Logger.info(f"User <username: {username}> verified")
-        if not self.pwd_context.verify(password, user.hashed_password):
-            return None
+        try:
+            if not self.pwd_context.verify(password, user.hashed_password):
+                return None
+        except (InvalidHashError, UnknownHashError) as ex:
+            Logger.error(f"HashError: {ex}")
         return user
     
     async def delete_user(self, user_id) -> bool:
         if not await self.users_db.delete_user_by_id(user_id):
             return False
         Logger.info(f"User <id: {user_id}> deleted")
+        user = UsersDTO(id=user_id, username="", email="deleteuser@del.ru", hashed_password="")
+        await self._synchronize_user(user, "update")
         return True
     
     async def _get_user(self, username: str) -> UsersDTO | None:

@@ -7,7 +7,7 @@ import pytest
 from controllers import *
 from fastapi import UploadFile
 from fake_db_models import FakeUsersDB, FakeImagesDB, FakeProfilesCacher, FakeProfilePicturesDB
-from schemas import ZodiacSign, Gender, UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesPostDTO, ShortProfilesDTO
+from schemas import ZodiacSign, Gender, UsersPostDTO, UsersDTO, ImagesPostDTO, ProfilesDTO, ShortProfilesDTO
 
 
 full_user_data = {
@@ -45,9 +45,9 @@ wrong_min_user_data: dict[str, Any] = {
 def create_all_controllers():
     controllers = {}
     controllers.update(
-        users=Users(FakeUsersDB()),
-        images=Images(FakeImagesDB()),
-        profile_pictures=ProfilePictures(FakeProfilePicturesDB(FakeImagesDB())),
+        users=Users(FakeUsersDB(), FakeProfilesCacher()),
+        images=Images(FakeImagesDB(), FakeProfilesCacher()),
+        profile_pictures=ProfilePictures(FakeProfilePicturesDB(FakeImagesDB()), FakeProfilesCacher()),
         profile_cacher=FakeProfilesCacher(),
     )
     return controllers
@@ -61,7 +61,7 @@ async def create_image():
 
 
 async def test_users_p():
-    users = Users(FakeUsersDB())
+    users = Users(FakeUsersDB(), FakeProfilesCacher())
     full_user = UsersDTO(id=1, **full_user_data)
     full_user_post = UsersPostDTO(**full_user_data)
     min_user = UsersDTO(id=2, **min_user_data)
@@ -80,7 +80,7 @@ async def test_users_p():
 
 
 async def test_users_n():
-    users = Users(FakeUsersDB())
+    users = Users(FakeUsersDB(), FakeProfilesCacher())
     min_user = UsersDTO(id=1, **min_user_data)
     min_user_post = UsersPostDTO(**min_user_data)
     wrong_min_user_post = UsersPostDTO(**wrong_min_user_data)
@@ -95,16 +95,16 @@ async def test_users_n():
 
 
 async def test_images(create_image):
-    images = Images(FakeImagesDB())
+    images = Images(FakeImagesDB(), FakeProfilesCacher())
     fake_image = UploadFile(filename="tets.png", file=create_image)
 
     assert await images.save_user_image(fake_image,  1) is True
     assert await images.get_user_images(1) != []
-    assert await images.delete_user_images(1) is True
+    assert await images.delete_user_images(1, 1) is True
 
 
 async def test_profile_pictures(create_image):
-    profile_pictures = ProfilePictures(FakeProfilePicturesDB(FakeImagesDB()))
+    profile_pictures = ProfilePictures(FakeProfilePicturesDB(FakeImagesDB()), FakeProfilesCacher())
     fake_image = UploadFile(filename="tets.png", file=create_image)
 
     assert await profile_pictures.create_profile_pictures(1)

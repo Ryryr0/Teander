@@ -62,11 +62,12 @@ class ImagesDTO(ImagesPostDTO):
 
 
 class ShortProfilesDTO(BaseModel):
+    id: int
     user: UsersPostDTO
     profile_picture: ImagesPostDTO | None = None
 
 
-class ProfilesPostDTO(ShortProfilesDTO):
+class ProfilesDTO(ShortProfilesDTO):
     images: list[ImagesPostDTO] | None = None
 
 

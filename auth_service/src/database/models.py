@@ -51,7 +51,7 @@ class UsersDB(IUsersDB):
     async def update_user_by_id(self, user_id: int, new_user_data: UsersPostDTO) -> bool:
         async with self.__a_session_factory() as session:
             try:
-                if not await self.__check_duplication_user_data(new_user_data):
+                if not await self.__check_duplication_user_data(new_user_data, user_id=user_id):
                     return False
                 user_orm = await session.get(UsersOrm, user_id)
                 if user_orm is None or user_orm.disabled:
@@ -79,7 +79,7 @@ class UsersDB(IUsersDB):
                 return False
         return True
 
-    async def __check_duplication_user_data(self, new_user_data: UsersPostDTO) -> bool:
+    async def __check_duplication_user_data(self, new_user_data: UsersPostDTO, user_id: int | None = None) -> bool:
         query = (
                     select(UsersOrm)
                     .select_from(UsersOrm)
@@ -93,9 +93,15 @@ class UsersDB(IUsersDB):
             try:
                 exec_result = await session.execute(query)
                 results = exec_result.scalars().fetchall()
+                if not results:
+                    return True
+                if user_id is None:
+                    if results:
+                        return False
                 for record in results:
+                    if record.id == user_id:
+                        continue
                     if new_user_data.username == record.username:
-                        Logger.debug(f"{new_user_data.username=} | {record.username=}")
                         return False
                     if new_user_data.email == record.email:
                         return False
